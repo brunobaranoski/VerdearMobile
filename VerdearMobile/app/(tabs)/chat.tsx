@@ -7,11 +7,14 @@ import {
   Image,
   TextInput,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TelaChat() {
-  // Lista simulada
   const chats = [
     {
       id: "1",
@@ -33,23 +36,19 @@ export default function TelaChat() {
         { from: "bot", text: "Olá Ciclano!" },
         { from: "user", text: "Pode me ajudar?" },
         { from: "bot", text: "Claro, diga sua dúvida!" },
-      ],
-    },
-    {
-      id: "3",
-      name: "Beltrano",
-      avatar: "https://placehold.co/100x100",
-      lastMessage: "Tem desconto?",
-      messages: [
-        { from: "bot", text: "Olá Beltrano!" },
-        { from: "user", text: "Tem desconto?" },
-        { from: "bot", text: "Depende do produto 😄" },
+        { from: "user", text: "Não recebi meu produto." },
+        { from: "bot", text: "Pode por favor me informar o código do seu pedido?" },
+        { from: "user", text: "989706" },
+        { from: "bot", text: "Só um momento por favor que estou verificando" },
       ],
     },
   ];
 
   const [selectedChat, setSelectedChat] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
+  const insets = useSafeAreaInsets();
+
+  const selected = chats.find((c) => c.id === selectedChat);
 
   const renderMessage = ({ item }) => (
     <View
@@ -58,14 +57,17 @@ export default function TelaChat() {
         item.from === "user" ? styles.user : styles.bot,
       ]}
     >
-      <Text style={styles.messageText}>{item.text}</Text>
+      <Text
+        style={[
+          styles.messageText,
+          item.from === "user" ? { color: "#fff" } : { color: "#000" },
+        ]}
+      >
+        {item.text}
+      </Text>
     </View>
   );
 
-  // Objeto do chat selecionado
-  const selected = chats.find((c) => c.id === selectedChat);
-
-  // Função para enviar mensagem
   const handleSend = () => {
     if (!inputMessage.trim()) return;
     selected.messages.push({ from: "user", text: inputMessage });
@@ -73,11 +75,12 @@ export default function TelaChat() {
   };
 
   // -----------------------------
-  // Tela 1: Lista de conversas
+  // Lista de conversas
   // -----------------------------
   if (!selected) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar backgroundColor="#1B5E20" barStyle="light-content" />
         <View style={styles.listHeader}>
           <Ionicons name="help-circle-outline" size={24} color="#1B5E20" />
           <View style={{ marginLeft: 8 }}>
@@ -102,58 +105,87 @@ export default function TelaChat() {
             </TouchableOpacity>
           )}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
   // -----------------------------
-  // Tela 2: Conversa do chat
+  // Chat aberto
   // -----------------------------
   return (
-    <View style={styles.container}>
-      {/* Cabeçalho do chat */}
-      <View style={styles.chatHeader}>
-        <TouchableOpacity onPress={() => setSelectedChat(null)}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Image source={{ uri: selected.avatar }} style={styles.headerAvatar} />
-        <Text style={styles.chatHeaderTitle}>{selected.name}</Text>
-      </View>
+    <SafeAreaView style={styles.chatSafeArea}>
+      <StatusBar backgroundColor="#1B5E20" barStyle="light-content" />
 
-      {/* Mensagens */}
-      <FlatList
-        data={selected.messages}
-        renderItem={renderMessage}
-        keyExtractor={(_, index) => index.toString()}
-        contentContainerStyle={styles.messagesContainer}
-      />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+      >
+        {/* Cabeçalho */}
+        <View style={styles.chatHeader}>
+          <TouchableOpacity onPress={() => setSelectedChat(null)}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Image source={{ uri: selected.avatar }} style={styles.headerAvatar} />
+          <Text style={styles.chatHeaderTitle}>{selected.name}</Text>
+        </View>
 
-      {/* Campo de envio */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Envie sua mensagem"
-          value={inputMessage}
-          onChangeText={setInputMessage}
+        {/* Mensagens */}
+        <FlatList
+          data={selected.messages}
+          renderItem={renderMessage}
+          keyExtractor={(_, index) => index.toString()}
+          contentContainerStyle={styles.messagesContainer}
         />
-        <TouchableOpacity onPress={handleSend}>
-          <Ionicons name="send" size={22} color="#1B5E20" />
-        </TouchableOpacity>
-      </View>
-    </View>
+
+        {/* Campo de envio */}
+        <View
+          style={[
+            styles.inputContainer,
+            {
+              paddingBottom: 0, // usa apenas o safe area real
+            },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => console.log("Emoji button pressed")}
+            style={styles.emojiButton}
+          >
+            <Ionicons name="happy-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Envie sua mensagem"
+            placeholderTextColor="#888"
+            value={inputMessage}
+            onChangeText={setInputMessage}
+          />
+
+          <TouchableOpacity onPress={handleSend}>
+            <Ionicons name="send" size={22} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 // -----------------------------
-// Estilos
+// ESTILOS
 // -----------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingTop: Platform.OS === "android" ? 25 : 0,
   },
 
-  // ---- Lista de chats ----
+  chatSafeArea: {
+    flex: 1,
+    backgroundColor: "#1B5E20",
+  },
+
   listHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -162,7 +194,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     backgroundColor: "#F8F8F8",
   },
-  headerTitle: { fontSize: 16, color: "#1B5E20", fontWeight: "600" },
+  headerTitle: { fontSize: 18, color: "#1B5E20", fontWeight: "600" },
   headerSubtitle: { fontSize: 12, color: "#777" },
   chatItem: {
     flexDirection: "row",
@@ -170,6 +202,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderBottomWidth: 1,
     borderColor: "#eee",
+    backgroundColor: "#fff",
   },
   avatar: {
     width: 45,
@@ -180,7 +213,6 @@ const styles = StyleSheet.create({
   chatName: { fontWeight: "bold", color: "#333" },
   chatPreview: { color: "#888", fontSize: 12 },
 
-  // ---- Chat ----
   chatHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -194,7 +226,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  messagesContainer: { padding: 10, flexGrow: 1 },
+  messagesContainer: {
+    padding: 10,
+    flexGrow: 1,
+    backgroundColor: "#fff",
+  },
 
   message: {
     padding: 10,
@@ -204,15 +240,24 @@ const styles = StyleSheet.create({
   },
   bot: { backgroundColor: "#EAE7E1", alignSelf: "flex-start" },
   user: { backgroundColor: "#1B5E20", alignSelf: "flex-end" },
-  messageText: { color: "#000" },
+  messageText: { fontSize: 15 },
 
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#ccc",
+    backgroundColor: "#1B5E20",
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingTop: 8,
   },
-  input: { flex: 1, padding: 10, fontSize: 16 },
+  emojiButton: {
+    marginRight: 6,
+  },
+  input: {
+    flex: 1,
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginRight: 8,
+  },
 });
