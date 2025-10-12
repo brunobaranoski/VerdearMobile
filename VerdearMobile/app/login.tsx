@@ -8,8 +8,9 @@ import {
   Logo,
 } from '@/components/shared/Index';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { router } from 'expo-router';
 
-const LoginScreen = ({ onNavigateToCadastro }) => {
+const LoginScreen = () => {
   return (
     <Container>
       <Decorations theme="login" />
@@ -18,9 +19,9 @@ const LoginScreen = ({ onNavigateToCadastro }) => {
         <FormCard title="Login">
           <Input placeholder="E-mail" type="email" />
           <Input placeholder="Senha" type="password" secureTextEntry />
-          <Button onPress={onNavigateToCadastro}>ENTRAR</Button>
+          <Button onPress={() => router.replace('/(tabs)')}>ENTRAR</Button>
           <View style={styles.registerLink}>
-            <TouchableOpacity onPress={onNavigateToCadastro}>
+            <TouchableOpacity onPress={() => router.push('/cadastro')}>
               <Text style={styles.linkText}>Cadastrar</Text>
             </TouchableOpacity>
           </View>

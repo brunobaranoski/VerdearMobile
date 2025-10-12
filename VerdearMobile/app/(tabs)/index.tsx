@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 
 export default function HomeScreen() {
   return (
@@ -15,22 +14,6 @@ export default function HomeScreen() {
         <Text style={styles.text}>
           Explore produtos sustentáveis e conecte-se com outros usuários.
         </Text>
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => router.push('/login')}
-          >
-            <Text style={styles.buttonText}>Fazer Login</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.buttonSecondary]}
-            onPress={() => router.push('/cadastro')}
-          >
-            <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Cadastrar</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </ScrollView>
   );
@@ -73,29 +56,5 @@ const styles = StyleSheet.create({
     color: '#333333',
     lineHeight: 24,
     fontFamily: 'Montserrat',
-  },
-  buttonContainer: {
-    marginTop: 30,
-    gap: 12,
-  },
-  button: {
-    backgroundColor: '#FF7B00',
-    paddingVertical: 14,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  buttonSecondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#2C5F2D',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: 'Montserrat',
-  },
-  buttonTextSecondary: {
-    color: '#2C5F2D',
   },
 });

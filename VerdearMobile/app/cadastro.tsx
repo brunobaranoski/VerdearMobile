@@ -9,8 +9,9 @@ import {
     Input,
     Logo,
 } from '@/components/shared/Index';
+import { router } from 'expo-router';
 
-const CadastroScreen = ({ onNavigateToLogin }) => {
+const CadastroScreen = () => {
   const [activeTab, setActiveTab] = useState('Vendedor');
 
   return (
@@ -30,7 +31,7 @@ const CadastroScreen = ({ onNavigateToLogin }) => {
           <Input placeholder="Número de telefone" type="tel" />
           <Input placeholder="E-mail" type="email" />
           <Input placeholder="Senha" type="password" />
-          <Button onPress={onNavigateToLogin}>CRIAR CONTA</Button>
+          <Button onPress={() => router.replace('/(tabs)')}>CRIAR CONTA</Button>
         </FormCard>
       </Content>
     </Container>
