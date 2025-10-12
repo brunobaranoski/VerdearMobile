@@ -1,43 +1,36 @@
-import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Stack } from "expo-router";
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
-export default function TabLayout() {
+// Previne que a splash screen seja escondida automaticamente
+SplashScreen.preventAutoHideAsync();
+
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    'Playfair Display': require('../assets/fonts/Playfair_Display/static/PlayfairDisplay-Regular.ttf'),
+    'Playfair Display Bold': require('../assets/fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf'),
+    'Playfair Display Italic': require('../assets/fonts/Playfair_Display/static/PlayfairDisplay-Italic.ttf'),
+    'Montserrat': require('../assets/fonts/Montserrat/static/Montserrat-Regular.ttf'),
+    'Montserrat Bold': require('../assets/fonts/Montserrat/static/Montserrat-Bold.ttf'),
+    'Montserrat SemiBold': require('../assets/fonts/Montserrat/static/Montserrat-SemiBold.ttf'),
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: "#fff",
-        tabBarStyle: { backgroundColor: "#1B5E20" },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Início",
-          tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="TelaChat"
-        options={{
-          title: "Chat",
-          tabBarIcon: ({ color }) => <Ionicons name="chatbubbles-outline" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="compras"
-        options={{
-          title: "Compras",
-          tabBarIcon: ({ color }) => <Ionicons name="cart-outline" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="perfil"
-        options={{
-          title: "Perfil",
-          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />,
-        }}
-      />
-    </Tabs>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="cadastro" options={{ headerShown: false }} />
+    </Stack>
   );
 }
