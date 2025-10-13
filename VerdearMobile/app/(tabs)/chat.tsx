@@ -10,43 +10,68 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TelaChat() {
-  const chats = [
-    {
-      id: "1",
-      name: "Fulano",
-      avatar: "https://placehold.co/100x100",
-      lastMessage: "Oi! Tudo bem?",
-      messages: [
-        { from: "bot", text: "Olá Fulano!" },
-        { from: "user", text: "Oi! Tudo bem?" },
-        { from: "bot", text: "Como posso te ajudar hoje?" },
-      ],
-    },
-    {
-      id: "2",
-      name: "Ciclano",
-      avatar: "https://placehold.co/100x100",
-      lastMessage: "Pode me ajudar?",
-      messages: [
-        { from: "bot", text: "Olá Ciclano!" },
-        { from: "user", text: "Pode me ajudar?" },
-        { from: "bot", text: "Claro, diga sua dúvida!" },
-        { from: "user", text: "Não recebi meu produto." },
-        { from: "bot", text: "Pode por favor me informar o código do seu pedido?" },
-        { from: "user", text: "989706" },
-        { from: "bot", text: "Só um momento por favor que estou verificando" },
-      ],
-    },
-  ];
+const chats = [
+  {
+    id: "1",
+    name: "Fulano",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    lastMessage: "Oi! Tudo bem?",
+    messages: [
+      { from: "bot", text: "Olá Fulano!" },
+      { from: "user", text: "Oi! Tudo bem?" },
+      { from: "bot", text: "Como posso te ajudar hoje?" },
+    ],
+  },
+  {
+    id: "2",
+    name: "Ciclano",
+    avatar: "https://randomuser.me/api/portraits/men/12.jpg",
+    lastMessage: "Pode me ajudar?",
+    messages: [
+      { from: "bot", text: "Olá Ciclano!" },
+      { from: "user", text: "Pode me ajudar?" },
+      { from: "bot", text: "Claro, diga sua dúvida!" },
+      { from: "user", text: "Não recebi meu produto." },
+      {
+        from: "bot",
+        text: "Pode por favor me informar o código do seu pedido?",
+      },
+      { from: "user", text: "989706" },
+      { from: "bot", text: "Só um momento por favor que estou verificando" },
+    ],
+  },
+  {
+    id: "3",
+    name: "Maria",
+    avatar: "https://randomuser.me/api/portraits/women/45.jpg",
+    lastMessage: "Tudo certo com meu pedido?",
+    messages: [
+      { from: "bot", text: "Olá Maria!" },
+      { from: "user", text: "Tudo certo com meu pedido?" },
+      { from: "bot", text: "Sim, ele já foi enviado. Deve chegar amanhã." },
+    ],
+  },
+  {
+    id: "4",
+    name: "Joana",
+    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+    lastMessage: "Obrigada!",
+    messages: [
+      { from: "bot", text: "Olá Joana!" },
+      { from: "user", text: "Obrigada!" },
+      { from: "bot", text: "De nada 😊" },
+    ],
+  },
+];
 
   const [selectedChat, setSelectedChat] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
-  const insets = useSafeAreaInsets();
 
   const selected = chats.find((c) => c.id === selectedChat);
 
@@ -72,14 +97,15 @@ export default function TelaChat() {
     if (!inputMessage.trim()) return;
     selected.messages.push({ from: "user", text: inputMessage });
     setInputMessage("");
+    Keyboard.dismiss();
   };
 
-  // -----------------------------
-  // Lista de conversas
-  // -----------------------------
+  // ------------------------------------
+  // LISTA DE CONVERSAS
+  // ------------------------------------
   if (!selected) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         <StatusBar backgroundColor="#1B5E20" barStyle="light-content" />
         <View style={styles.listHeader}>
           <Ionicons name="help-circle-outline" size={24} color="#1B5E20" />
@@ -109,81 +135,95 @@ export default function TelaChat() {
     );
   }
 
-  // -----------------------------
-  // Chat aberto
-  // -----------------------------
+  // ------------------------------------
+  // TELA DE CHAT ABERTA
+  // ------------------------------------
   return (
-    <SafeAreaView style={styles.chatSafeArea}>
+    <View style={styles.chatContainer}>
       <StatusBar backgroundColor="#1B5E20" barStyle="light-content" />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
-      >
-        {/* Cabeçalho */}
-        <View style={styles.chatHeader}>
-          <TouchableOpacity onPress={() => setSelectedChat(null)}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Image source={{ uri: selected.avatar }} style={styles.headerAvatar} />
-          <Text style={styles.chatHeaderTitle}>{selected.name}</Text>
-        </View>
+      {/* Fundo dividido */}
+      <View style={styles.backgroundLayer}>
+        <View style={styles.topGreenHalf} />
+        <View style={styles.bottomWhiteHalf} />
+      </View>
 
-        {/* Mensagens */}
-        <FlatList
-          data={selected.messages}
-          renderItem={renderMessage}
-          keyExtractor={(_, index) => index.toString()}
-          contentContainerStyle={styles.messagesContainer}
-        />
+      {/* Conteúdo */}
+<KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+  keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+>
+  <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+          {/* Cabeçalho */}
+          <View style={styles.chatHeader}>
+            <TouchableOpacity onPress={() => setSelectedChat(null)}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Image source={{ uri: selected.avatar }} style={styles.headerAvatar} />
+            <Text style={styles.chatHeaderTitle}>{selected.name}</Text>
+          </View>
 
-        {/* Campo de envio */}
-        <View
-          style={[
-            styles.inputContainer,
-            {
-              paddingBottom: 0, // usa apenas o safe area real
-            },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={() => console.log("Emoji button pressed")}
-            style={styles.emojiButton}
-          >
-            <Ionicons name="happy-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Envie sua mensagem"
-            placeholderTextColor="#888"
-            value={inputMessage}
-            onChangeText={setInputMessage}
+          {/* Mensagens */}
+          <FlatList
+            data={selected.messages}
+            renderItem={renderMessage}
+            keyExtractor={(_, index) => index.toString()}
+            contentContainerStyle={styles.messagesContainer}
+            showsVerticalScrollIndicator={false}
           />
 
-          <TouchableOpacity onPress={handleSend}>
-            <Ionicons name="send" size={22} color="#fff" />
-          </TouchableOpacity>
-        </View>
+          {/* Campo de envio */}
+          <View style={styles.inputContainer}>
+            <TouchableOpacity style={styles.emojiButton}>
+              <Ionicons name="happy-outline" size={22} color="#6e6e6e" />
+            </TouchableOpacity>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Envie sua mensagem"
+              placeholderTextColor="#6e6e6e"
+              value={inputMessage}
+              onChangeText={setInputMessage}
+              returnKeyType="send"
+              onSubmitEditing={handleSend}
+            />
+
+            <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+              <Ionicons name="arrow-forward" size={22} color="#1B5E20" />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-// -----------------------------
+// ------------------------------------
 // ESTILOS
-// -----------------------------
+// ------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: Platform.OS === "android" ? 25 : 0,
   },
 
-  chatSafeArea: {
+  chatContainer: {
     flex: 1,
+    backgroundColor: "#1B5E20", // Corrige o topo branco
+  },
+
+  // Fundo dividido
+  backgroundLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  topGreenHalf: {
+    flex: 0.5,
     backgroundColor: "#1B5E20",
+  },
+  bottomWhiteHalf: {
+    flex: 0.5,
+    backgroundColor: "#fff",
   },
 
   listHeader: {
@@ -221,11 +261,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   headerAvatar: { width: 35, height: 35, borderRadius: 20 },
-  chatHeaderTitle: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  chatHeaderTitle: { color: "#fff", fontSize: 16, fontWeight: "600" },
+
   messagesContainer: {
     padding: 10,
     flexGrow: 1,
@@ -245,19 +282,25 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1B5E20",
-    paddingHorizontal: 10,
-    paddingTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderColor: "#ddd",
   },
   emojiButton: {
-    marginRight: 6,
+    marginRight: 8,
   },
   input: {
     flex: 1,
-    padding: 10,
-    fontSize: 16,
-    backgroundColor: "#fff",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: "#f8f8f8",
     borderRadius: 20,
-    marginRight: 8,
+    fontSize: 15,
+    color: "#333",
+  },
+  sendButton: {
+    marginLeft: 8,
   },
 });
