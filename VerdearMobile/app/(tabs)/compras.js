@@ -20,6 +20,41 @@ const CartContentPlaceholder = () => (
   </View>
 );
 
+// Componente Placeholder para Detalhes do Cartão
+const CardDetails = ({ onClose }) => (
+  <View style={styles.detailsContainer}>
+    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+      <Icon name="close" size={24} color="#999" />
+    </TouchableOpacity>
+    <TextInput style={styles.inputDetails} placeholder="Número do Cartão" placeholderTextColor="#666" />
+    <TextInput style={styles.inputDetails} placeholder="Nome do Titular" placeholderTextColor="#666" />
+    <View style={styles.row}>
+      <TextInput style={[styles.inputDetails, styles.inputHalf]} placeholder="Validade (MM/AA)" placeholderTextColor="#666" />
+      <TextInput style={[styles.inputDetails, styles.inputHalf]} placeholder="CVV" placeholderTextColor="#666" />
+    </View>
+    <TouchableOpacity style={styles.parcelasButton}>
+        <Text style={styles.parcelasText}>Selecione as Parcelas</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+// NOVO Componente Placeholder para Detalhes do PIX
+const PixDetails = ({ onClose }) => (
+  <View style={[styles.detailsContainer, styles.pixContainer]}>
+    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+      <Icon name="close" size={24} color="#999" />
+    </TouchableOpacity>
+    <Text style={styles.pixTitle}>Chave PIX (CNPJ: 00.000.000/0001-00)</Text>
+    <View style={styles.pixKeyBox}>
+        <Text style={styles.pixKeyText}>A8C8C80A-00A0-4C00-00A0-B00C00000000</Text>
+    </View>
+    <TouchableOpacity style={styles.copyButton}>
+        <Icon name="content-copy" size={20} color="#fff" />
+        <Text style={styles.copyButtonText}>COPIAR CHAVE</Text>
+    </TouchableOpacity>
+  </View>
+);
+
 // Gradiente lateral laranja
 const SideGradient = ({ style }) => (
   <LinearGradient
@@ -36,6 +71,8 @@ const CartScreen = () => {
     { id: 2, name: 'Produto 2', quantity: 1, price: 35.5 },
   ]);
   const [paymentMethod, setPaymentMethod] = useState('PIX');
+  const [cardDetailsVisible, setCardDetailsVisible] = useState(false);
+  const [pixDetailsVisible, setPixDetailsVisible] = useState(false); // NOVO ESTADO
 
   const updateQuantity = (id, change) => {
     setCartItems((prev) =>
@@ -49,6 +86,33 @@ const CartScreen = () => {
 
   const removeItem = (id) => setCartItems((prev) => prev.filter((item) => item.id !== id));
   const total = cartItems.reduce((acc, i) => acc + i.price * i.quantity, 0);
+
+  const handlePaymentSelect = (method) => {
+    // Se clicar no método ativo, fecha o detalhe (comportamento de toggle)
+    if (method === 'CARTAO') {
+      if (paymentMethod === 'CARTAO' && cardDetailsVisible) {
+        setCardDetailsVisible(false);
+      } else {
+        setCardDetailsVisible(true);
+        setPixDetailsVisible(false);
+        setPaymentMethod('CARTAO');
+      }
+    } else if (method === 'PIX') {
+      if (paymentMethod === 'PIX' && pixDetailsVisible) {
+        setPixDetailsVisible(false);
+      } else {
+        setPixDetailsVisible(true);
+        setCardDetailsVisible(false);
+        setPaymentMethod('PIX');
+      }
+    }
+  };
+  
+  // Função para fechar os detalhes
+  const handleCloseDetails = () => {
+    setCardDetailsVisible(false);
+    setPixDetailsVisible(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -74,7 +138,11 @@ const CartScreen = () => {
         {/* Gradiente Lateral Esquerdo */}
         <SideGradient style={styles.leftGradient} />
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.content} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContentContainer}
+        >
           {/* Section Header - Carrinho */}
           <View style={styles.sectionHeader}>
             <LinearGradient
@@ -91,10 +159,8 @@ const CartScreen = () => {
             <View key={item.id} style={styles.card}>
               <CartContentPlaceholder />
               <View style={styles.itemInfo}>
-                {/* Nome do item (mantido para visualização) */}
                 <Text style={styles.itemName}>{item.name}</Text> 
                 <View style={styles.quantityRemoveContainer}>
-                  {/* Container de Quantidade com Gradiente */}
                   <LinearGradient
                     colors={['#FFB74D', '#FF9800']}
                     start={{ x: 0, y: 0 }}
@@ -115,7 +181,6 @@ const CartScreen = () => {
                       <Text style={styles.quantityButtonText}>+</Text>
                     </TouchableOpacity>
                   </LinearGradient>
-                  {/* Ícone de Excluir */}
                   <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.removeButton}>
                     <Icon name="delete-outline" size={26} color="#999" />
                   </TouchableOpacity>
@@ -128,7 +193,8 @@ const CartScreen = () => {
           <View style={styles.totalContainer}>
             <Text style={styles.totalText}>TOTAL</Text>
             <View style={styles.totalValueContainer}>
-              <Text style={styles.totalValue}>--------------</Text>
+              {/* PONTILHADO AUMENTADO AQUI */}
+              <Text style={styles.totalValue}>---------------------</Text> 
               <TouchableOpacity style={styles.totalButton}>
                 <Text style={styles.totalButtonText}>R$ {total.toFixed(2)}</Text>
               </TouchableOpacity>
@@ -147,14 +213,18 @@ const CartScreen = () => {
           <Text style={styles.label}>PAGAMENTO</Text>
           <View style={styles.paymentContainer}>
             <TouchableOpacity
-              style={[styles.paymentButton, paymentMethod === 'CARTAO' && styles.activePaymentButton]}
-              onPress={() => setPaymentMethod('CARTAO')}
+              style={[
+                styles.paymentButton, 
+                paymentMethod === 'CARTAO' && styles.cardActiveOutline, 
+                paymentMethod === 'PIX' && !pixDetailsVisible && {marginRight: 10} 
+              ]}
+              onPress={() => handlePaymentSelect('CARTAO')}
             >
-              <Text style={[styles.paymentText, paymentMethod === 'CARTAO' && styles.activePaymentText]}>CARTÃO</Text>
+              <Text style={[styles.paymentText]}>CARTÃO</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.paymentButton, paymentMethod === 'PIX' && styles.activePaymentButton]}
-              onPress={() => setPaymentMethod('PIX')}
+              onPress={() => handlePaymentSelect('PIX')}
             >
               <LinearGradient
                 colors={['#FF9800', '#FFB74D']}
@@ -166,6 +236,10 @@ const CartScreen = () => {
               </LinearGradient>
             </TouchableOpacity>
           </View>
+          
+          {/* DETALHES EXPANSÍVEIS */}
+          {paymentMethod === 'CARTAO' && cardDetailsVisible && <CardDetails onClose={handleCloseDetails} />}
+          {paymentMethod === 'PIX' && pixDetailsVisible && <PixDetails onClose={handleCloseDetails} />}
 
           {/* ENTREGA */}
           <Text style={styles.label}>ENTREGA</Text>
@@ -194,26 +268,6 @@ const CartScreen = () => {
         {/* Gradiente Lateral Direito */}
         <SideGradient style={styles.rightGradient} />
       </View>
-
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="home" size={24} color="#fff" />
-          <Text style={styles.navText}>Início</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="chat" size={24} color="#fff" />
-          <Text style={styles.navText}>Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="shopping-cart" size={24} color="#FF9800" />
-          <Text style={[styles.navText, styles.activeNavText]}>Compras</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="person" size={24} color="#fff" />
-          <Text style={styles.navText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };
@@ -221,7 +275,7 @@ const CartScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: {
-    backgroundColor: '#38764B', // Cor verde escura
+    backgroundColor: '#38764B',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -260,6 +314,9 @@ const styles = StyleSheet.create({
     zIndex: 1, 
     backgroundColor: 'transparent',
   },
+  scrollContentContainer: {
+    paddingBottom: 20, 
+  },
   
   // Gradientes laterais
   leftGradient: {
@@ -294,7 +351,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -404,7 +460,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   
-  // Pagamento
+  // Pagamento (Botões)
   paymentContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -423,7 +479,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   activePaymentButton: {
-    borderWidth: 0, 
+    borderWidth: 0, // PIX usa gradiente total
+  },
+  cardActiveOutline: {
+    borderColor: '#FF9800',
+    borderWidth: 2, // Borda mais grossa para o cartão ativo
   },
   paymentText: { 
     color: '#FF9800', 
@@ -437,6 +497,95 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pixText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  
+  // Detalhes Expansíveis (Base)
+  detailsContainer: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 15,
+    marginTop: 5,
+    borderWidth: 1,
+    borderColor: '#eee',
+    position: 'relative', // Para o botão de fechar
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    zIndex: 10,
+    padding: 5,
+  },
+
+  // Detalhes do Cartão
+  inputDetails: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#333',
+    backgroundColor: '#fff',
+    marginBottom: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  inputHalf: {
+    width: '48%',
+  },
+  parcelasButton: {
+    backgroundColor: '#ccc',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  parcelasText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  
+  // Detalhes do PIX
+  pixContainer: {
+      alignItems: 'center',
+  },
+  pixTitle: {
+      fontWeight: 'bold',
+      color: '#333',
+      marginBottom: 10,
+  },
+  pixKeyBox: {
+      backgroundColor: '#fff',
+      borderWidth: 1,
+      borderColor: '#ddd',
+      padding: 10,
+      borderRadius: 8,
+      width: '100%',
+      marginBottom: 15,
+      alignItems: 'center',
+  },
+  pixKeyText: {
+      color: '#666',
+      fontSize: 14,
+      textAlign: 'center',
+  },
+  copyButton: {
+      backgroundColor: '#38764B',
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 20,
+      gap: 5,
+  },
+  copyButtonText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 14,
+  },
 
   // Finalizar
   finalButton: {
@@ -454,19 +603,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold', 
     fontSize: 16 
   },
-
-  // Bottom Navigation Styles
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#38764B', 
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderTopLeftRadius: 0, 
-    borderTopRightRadius: 0, 
-  },
-  navItem: { flex: 1, alignItems: 'center' },
-  navText: { color: '#fff', fontSize: 12, marginTop: 4 },
-  activeNavText: { fontWeight: 'bold', color: '#FF9800' }, 
 });
 
 export default CartScreen;

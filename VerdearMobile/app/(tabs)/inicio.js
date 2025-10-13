@@ -55,11 +55,11 @@ const HomeScreen = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Banner/Vitrine: AGORA COM A IMAGEM REAL */}
+        {/* Banner/Vitrine */}
         <View style={styles.bannerContainer}>
           {/* Imagem de Fundo */}
           <Image
-            source={require('../../assets/images/header-principal.png')} // **NOVA IMAGEM AQUI**
+            source={require('../../assets/images/header-principal.png')} 
             style={styles.bannerImage}
             resizeMode="cover"
           />
@@ -129,25 +129,7 @@ const HomeScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="home" size={24} color="#FF9800" />
-          <Text style={[styles.navText, styles.activeNavText]}>Início</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="chat" size={24} color="#fff" />
-          <Text style={styles.navText}>Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="shopping-cart" size={24} color="#fff" />
-          <Text style={styles.navText}>Compras</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="person" size={24} color="#fff" />
-          <Text style={styles.navText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
+      {/* A Barra de Navegação Inferior (Bottom Nav) FOI REMOVIDA */}
     </SafeAreaView>
   );
 };
@@ -206,7 +188,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    // Note: Mantive o gradiente branco para simular o efeito "fading"
+    // Note: Mantive o gradiente branco para simular o efeito do protótipo
   },
   bannerTextLeft: {
     position: 'absolute',
@@ -336,16 +318,7 @@ const styles = StyleSheet.create({
     textAlign: 'center' 
   },
   
-  // Bottom Navigation Styles
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#38764B', 
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  navItem: { flex: 1, alignItems: 'center' },
-  navText: { color: '#fff', fontSize: 12, marginTop: 4 },
-  activeNavText: { fontWeight: 'bold', color: '#FF9800' }, 
+  // O styles.bottomNav foi removido.
 });
 
 export default HomeScreen;
