@@ -31,7 +31,7 @@ const CadastroScreen = () => {
           <Input placeholder="Número de telefone" type="tel" />
           <Input placeholder="E-mail" type="email" />
           <Input placeholder="Senha" type="password" />
-          <Button onPress={() => router.replace('/(tabs)')}>CRIAR CONTA</Button>
+          <Button onPress={() => router.replace('/(tabs)/inicio')}>CRIAR CONTA</Button>
         </FormCard>
       </Content>
     </Container>

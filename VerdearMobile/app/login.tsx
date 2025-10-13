@@ -19,7 +19,7 @@ const LoginScreen = () => {
         <FormCard title="Login">
           <Input placeholder="E-mail" type="email" />
           <Input placeholder="Senha" type="password" secureTextEntry />
-          <Button onPress={() => router.replace('/(tabs)')}>ENTRAR</Button>
+          <Button onPress={() => router.replace('/(tabs)/inicio')}>ENTRAR</Button>
           <View style={styles.registerLink}>
             <TouchableOpacity onPress={() => router.push('/cadastro')}>
               <Text style={styles.linkText}>Cadastrar</Text>
