@@ -40,7 +40,7 @@ const HomeScreen = () => {
         {/* LOGO */}
         <Image
           source={require('../../assets/images/logo-branca.png')} 
-          style={styles.logoImage}
+          style={styles.logoImage} // <-- Estilo alterado
           resizeMode="contain"
         />
         <View style={styles.searchContainer}>
@@ -145,8 +145,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   logoImage: { 
-    width: 100, 
-    height: 40, 
+    // ***** TAMANHO AUMENTADO *****
+    width: 120, 
+    height: 50, 
+    // ****************************
     marginLeft: -10, 
   },
   searchContainer: {
@@ -317,8 +319,6 @@ const styles = StyleSheet.create({
     fontWeight: '500', 
     textAlign: 'center' 
   },
-  
-  // O styles.bottomNav foi removido.
 });
 
 export default HomeScreen;

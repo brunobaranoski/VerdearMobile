@@ -70,9 +70,9 @@ const CartScreen = () => {
     { id: 1, name: 'Produto 1', quantity: 1, price: 25.9 },
     { id: 2, name: 'Produto 2', quantity: 1, price: 35.5 },
   ]);
-  const [paymentMethod, setPaymentMethod] = useState('PIX');
-  const [cardDetailsVisible, setCardDetailsVisible] = useState(false);
-  const [pixDetailsVisible, setPixDetailsVisible] = useState(false); // NOVO ESTADO
+  const [paymentMethod, setPaymentMethod] = useState('CARTAO');
+  const [cardDetailsVisible, setCardDetailsVisible] = useState(true); 
+  const [pixDetailsVisible, setPixDetailsVisible] = useState(false); 
 
   const updateQuantity = (id, change) => {
     setCartItems((prev) =>
@@ -88,23 +88,16 @@ const CartScreen = () => {
   const total = cartItems.reduce((acc, i) => acc + i.price * i.quantity, 0);
 
   const handlePaymentSelect = (method) => {
-    // Se clicar no método ativo, fecha o detalhe (comportamento de toggle)
     if (method === 'CARTAO') {
-      if (paymentMethod === 'CARTAO' && cardDetailsVisible) {
-        setCardDetailsVisible(false);
-      } else {
-        setCardDetailsVisible(true);
-        setPixDetailsVisible(false);
-        setPaymentMethod('CARTAO');
-      }
+      const shouldToggle = paymentMethod === 'CARTAO' && cardDetailsVisible;
+      setCardDetailsVisible(!shouldToggle);
+      setPixDetailsVisible(false);
+      setPaymentMethod('CARTAO');
     } else if (method === 'PIX') {
-      if (paymentMethod === 'PIX' && pixDetailsVisible) {
-        setPixDetailsVisible(false);
-      } else {
-        setPixDetailsVisible(true);
-        setCardDetailsVisible(false);
-        setPaymentMethod('PIX');
-      }
+      const shouldToggle = paymentMethod === 'PIX' && pixDetailsVisible;
+      setPixDetailsVisible(!shouldToggle);
+      setCardDetailsVisible(false);
+      setPaymentMethod('PIX');
     }
   };
   
@@ -121,7 +114,7 @@ const CartScreen = () => {
         {/* LOGO */}
         <Image
           source={require('../../assets/images/logo-branca.png')} 
-          style={styles.logoImage}
+          style={styles.logoImage} // <-- Estilo alterado para ser maior
           resizeMode="contain"
         />
         <View style={styles.searchContainer}>
@@ -194,7 +187,7 @@ const CartScreen = () => {
             <Text style={styles.totalText}>TOTAL</Text>
             <View style={styles.totalValueContainer}>
               {/* PONTILHADO AUMENTADO AQUI */}
-              <Text style={styles.totalValue}>---------------------</Text> 
+              <Text style={styles.totalValue}>--------------------</Text> 
               <TouchableOpacity style={styles.totalButton}>
                 <Text style={styles.totalButtonText}>R$ {total.toFixed(2)}</Text>
               </TouchableOpacity>
@@ -212,28 +205,50 @@ const CartScreen = () => {
           {/* PAGAMENTO */}
           <Text style={styles.label}>PAGAMENTO</Text>
           <View style={styles.paymentContainer}>
+            {/* BOTÃO CARTÃO */}
             <TouchableOpacity
-              style={[
-                styles.paymentButton, 
-                paymentMethod === 'CARTAO' && styles.cardActiveOutline, 
-                paymentMethod === 'PIX' && !pixDetailsVisible && {marginRight: 10} 
-              ]}
+              style={styles.paymentButton}
               onPress={() => handlePaymentSelect('CARTAO')}
             >
-              <Text style={[styles.paymentText]}>CARTÃO</Text>
+              {paymentMethod === 'CARTAO' ? (
+                // ESTADO ATIVO (Laranja preenchido)
+                <LinearGradient
+                  colors={['#FF9800', '#FFB74D']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.paymentInnerWrapper, styles.cardActiveFill]}
+                >
+                  <Text style={styles.pixText}>CARTÃO</Text>
+                </LinearGradient>
+              ) : (
+                // ESTADO INATIVO (Branco com borda laranja)
+                <View style={[styles.paymentInnerWrapper, styles.cardInactiveOutline]}>
+                  <Text style={styles.paymentText}>CARTÃO</Text>
+                </View>
+              )}
             </TouchableOpacity>
+            
+            {/* BOTÃO PIX */}
             <TouchableOpacity
-              style={[styles.paymentButton, paymentMethod === 'PIX' && styles.activePaymentButton]}
+              style={styles.paymentButton} 
               onPress={() => handlePaymentSelect('PIX')}
             >
-              <LinearGradient
-                colors={['#FF9800', '#FFB74D']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.pixGradientButton}
-              >
-                <Text style={styles.pixText}>PIX</Text>
-              </LinearGradient>
+              {paymentMethod === 'PIX' ? (
+                // ESTADO ATIVO (Laranja preenchido)
+                <LinearGradient
+                  colors={['#FF9800', '#FFB74D']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.paymentInnerWrapper, styles.cardActiveFill]}
+                >
+                  <Text style={styles.pixText}>PIX</Text>
+                </LinearGradient>
+              ) : (
+                // ESTADO INATIVO (Branco com borda laranja)
+                <View style={[styles.paymentInnerWrapper, styles.cardInactiveOutline]}>
+                  <Text style={styles.paymentText}>PIX</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
           
@@ -283,8 +298,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   logoImage: { 
-    width: 100, 
-    height: 40, 
+    // ***** AJUSTE DE TAMANHO AQUI *****
+    width: 120, // Aumentado de 100 para 120
+    height: 50, // Aumentado de 40 para 50
+    // ***********************************
     marginLeft: -10, 
   },
   searchContainer: {
@@ -464,39 +481,53 @@ const styles = StyleSheet.create({
   paymentContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 10, 
     marginTop: 5,
     marginBottom: 10,
   },
   paymentButton: {
-    flex: 1,
+    flex: 1, 
+    minHeight: 45, 
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FF9800',
-    marginRight: 10, 
+    backgroundColor: 'transparent', 
+    overflow: 'hidden', 
+  },
+  
+  // Wrapper interno usado para aplicar a borda ou o gradiente, garantindo o mesmo tamanho
+  paymentInnerWrapper: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // ESTADO INATIVO (Branco com Borda Laranja)
+  cardInactiveOutline: {
     backgroundColor: '#fff',
-  },
-  activePaymentButton: {
-    borderWidth: 0, // PIX usa gradiente total
-  },
-  cardActiveOutline: {
+    borderWidth: 2, 
     borderColor: '#FF9800',
-    borderWidth: 2, // Borda mais grossa para o cartão ativo
   },
+  
   paymentText: { 
     color: '#FF9800', 
     fontWeight: 'bold', 
     fontSize: 16 
   },
-  pixGradientButton: {
-    width: '100%',
-    paddingVertical: 11,
-    borderRadius: 8,
-    alignItems: 'center',
+  
+  // ESTADO ATIVO (Gradiente Laranja - Ocupa 100% do botão)
+  cardActiveFill: {
+    // Estilos já definidos no LinearGradient
   },
-  pixText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+
+  pixText: { 
+    color: '#fff', 
+    fontWeight: 'bold', 
+    fontSize: 16 
+  },
   
   // Detalhes Expansíveis (Base)
   detailsContainer: {
@@ -507,7 +538,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     borderWidth: 1,
     borderColor: '#eee',
-    position: 'relative', // Para o botão de fechar
+    position: 'relative', 
   },
   closeButton: {
     position: 'absolute',
