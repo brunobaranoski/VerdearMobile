@@ -43,7 +43,7 @@ export default function TelaMinhaContaFinal() {
       {/* CABEÇALHO VERDE */}
       <View style={styles.projectHeader}>
         <Image
-          source={require('../assets/images/logo_verdear.png')}
+          source={require('../../assets/images/logo_verdear.png')}
           style={styles.logo}
         />
         <View style={styles.searchContainer}>
