@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-// Componente de Item do Menu
 const MenuItem = ({ iconName, text }) => (
     <TouchableOpacity style={styles.menuItem}>
         {iconName ? <Ionicons name={iconName} size={24} color="#555" /> : <View style={{width: 24}}/>}
@@ -20,9 +19,7 @@ const MenuItem = ({ iconName, text }) => (
     </TouchableOpacity>
 );
 
-// Componente de Card de Produto Editável
 const ProductCard = ({ item, updateProductField }) => {
-    // A função updateProductField é passada para atualizar o estado no componente pai
     return (
         <View key={item.id} style={styles.productCard}>
             <ImageBackground 
@@ -31,7 +28,6 @@ const ProductCard = ({ item, updateProductField }) => {
                 imageStyle={{borderTopLeftRadius: 8, borderTopRightRadius: 8}}
             >
                 <View style={styles.cardOverlay}>
-                    {/* TextInput para o NOME */}
                     <TextInput
                         style={styles.cardNomeInput}
                         placeholder="NOME"
@@ -39,7 +35,6 @@ const ProductCard = ({ item, updateProductField }) => {
                         value={item.nome}
                         onChangeText={(text) => updateProductField(item.id, 'nome', text)}
                     />
-                    {/* TextInput para a DESCRIÇÃO */}
                     <TextInput
                         style={styles.cardDescricaoInput}
                         placeholder="Descrição"
@@ -50,12 +45,11 @@ const ProductCard = ({ item, updateProductField }) => {
                 </View>
             </ImageBackground>
             <View style={styles.cardValuesSection}>
-                {/* TextInput para o VALOR */}
                 <TextInput
                     style={styles.cardValorTextInput}
                     placeholder="Valores"
                     placeholderTextColor="#999"
-                    keyboardType="numeric" // Sugestão para campos de valor
+                    keyboardType="numeric" 
                     value={item.valor}
                     onChangeText={(text) => updateProductField(item.id, 'valor', text)}
                 />
@@ -75,14 +69,13 @@ export default function TelaMinhaContaFinal() {
         const novoId = Date.now().toString();
         const novoProduto = {
             id: novoId,
-            nome: "", // Campos iniciais vazios para preenchimento
+            nome: "", 
             descricao: "",
             valor: "",
         };
         setProdutos([...produtos, novoProduto]);
     };
 
-    // Função para atualizar um campo específico de um produto
     const updateProductField = (id, field, value) => {
         setProdutos(prevProdutos => 
             prevProdutos.map(produto => 
@@ -93,7 +86,6 @@ export default function TelaMinhaContaFinal() {
 
     return (
         <View style={styles.screen}>
-            {/* CABEÇALHO VERDE */}
             <View style={styles.projectHeader}>
                 <Image
                     source={require('../../assets/images/logo_verdear.png')}
@@ -108,15 +100,12 @@ export default function TelaMinhaContaFinal() {
                 </View>
             </View>
 
-            {/* CABEÇALHO LARANJA */}
             <View style={styles.header}>
                 <Ionicons name="person-circle-outline" size={32} color="#fff" />
                 <Text style={styles.headerTitle}>Minha conta</Text>
             </View>
 
-            {/* CONTAINER PRINCIPAL (SIDEBAR + CONTEÚDO) */}
             <View style={styles.container}>
-                {/* SIDEBAR (MENU LATERAL) */}
                 <View style={styles.sidebar}>
                     <View style={styles.profileSection}>
                         <View style={styles.avatarContainer}>
@@ -145,7 +134,6 @@ export default function TelaMinhaContaFinal() {
                     </View>
                 </View>
 
-                {/* CONTEÚDO PRINCIPAL */}
                 <View style={styles.mainContent}>
                     <View style={styles.mainHeader}>
                         <Ionicons name="document-text-outline" size={24} color="#555" />
@@ -153,7 +141,6 @@ export default function TelaMinhaContaFinal() {
                     </View>
                     
                     <ScrollView contentContainerStyle={styles.productsGrid} style={{flex: 1}}>
-                        {/* Renderizando o ProductCard com a função de atualização */}
                         {produtos.map((item) => (
                             <ProductCard 
                                 key={item.id} 
@@ -177,7 +164,6 @@ export default function TelaMinhaContaFinal() {
     );
 }
 
-// ESTILOS
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
@@ -270,7 +256,7 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     profileEmail: {
-        fontSize: 12,
+        fontSize: 10,
         color: "#777",
         textAlign: 'center'
     },
@@ -344,7 +330,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.45)',
         padding: 10,
     },
-    // Estilos para o TextInput do Nome (substitui cardNome)
     cardNomeInput: {
         color: 'white',
         fontWeight: 'bold',
@@ -355,7 +340,6 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(255, 255, 255, 0.5)',
     },
-    // Estilos para o TextInput da Descrição (substitui cardDescricao)
     cardDescricaoInput: {
         color: 'white',
         fontSize: 12,
@@ -369,7 +353,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 5,
     },
-    // Estilos para o TextInput do Valor (substitui cardValorText)
     cardValorTextInput: {
         color: '#888',
         fontSize: 12,

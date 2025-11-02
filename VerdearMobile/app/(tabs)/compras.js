@@ -187,7 +187,7 @@ const CartScreen = () => {
             <Text style={styles.totalText}>TOTAL</Text>
             <View style={styles.totalValueContainer}>
               {/* PONTILHADO AUMENTADO AQUI */}
-              <Text style={styles.totalValue}>--------------------</Text> 
+              <Text style={styles.totalValue}>-----------------</Text> 
               <TouchableOpacity style={styles.totalButton}>
                 <Text style={styles.totalButtonText}>R$ {total.toFixed(2)}</Text>
               </TouchableOpacity>
