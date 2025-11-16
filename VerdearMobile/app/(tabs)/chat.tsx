@@ -1,3 +1,6 @@
+// app/tabs/TelaChat.tsx
+// ✅ Versão TypeScript corrigida, funcional e com login automático temporário (admin@gmail.com / greener)
+
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -13,12 +16,12 @@ import {
   Keyboard,
   ActivityIndicator,
   Modal,
-  Alert,
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Toast } from "../../components/shared/Index";
 
-import { auth, db } from "../firebase";
+import { db } from "../firebase";
 import {
   collection,
   query,
@@ -33,9 +36,11 @@ import {
   getDocs,
   getDoc,
 } from "firebase/firestore";
-import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import { useAuth } from "../context/AuthContext";
 
-
+// ======================
+// 🔰 Tipos TypeScript
+// ======================
 type Message = {
   id?: string;
   from: string;
@@ -53,9 +58,11 @@ type Chat = {
   avatar?: string | null;
 };
 
-
+// ======================
+// 🚀 Componente principal
+// ======================
 export default function TelaChat() {
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loadingChats, setLoadingChats] = useState(true);
 
@@ -72,52 +79,25 @@ export default function TelaChat() {
   const [newInitialMessage, setNewInitialMessage] = useState("");
   const [creatingChat, setCreatingChat] = useState(false);
 
+  // Estados do Toast
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info' | 'warning'>('info');
+
   const unsubChatsRef = useRef<any>(null);
   const unsubMessagesRef = useRef<any>(null);
   const flatListRef = useRef<FlatList>(null);
 
-  // --- login automático temporário ---
-  const TEST_EMAIL = "admin@gmail.com";
-  const TEST_PASS = "greener";
+  // Função helper para mostrar Toast
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
-  // Autenticação
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      if (u) {
-        setUser(u);
-
-        try {
-          const userRef = doc(db, "users", u.uid);
-          const snap = await getDoc(userRef);
-          if (!snap.exists()) {
-            await setDoc(userRef, {
-              email: u.email || "",
-              name: u.displayName || u.email?.split("@")[0] || "Usuário",
-              avatar:
-                u.photoURL ||
-                `https://i.pravatar.cc/150?u=${encodeURIComponent(u.email ?? "")}`,
-              createdAt: new Date().toISOString(),
-            });
-            console.log("[users] doc criado automático para", u.uid);
-          }
-        } catch (err) {
-          console.error("Erro garantindo users doc:", err);
-        }
-      } else {
-        // login automático
-        try {
-          console.log("[autologin] tentando login automático...");
-          await signInWithEmailAndPassword(auth, TEST_EMAIL, TEST_PASS);
-        } catch (err) {
-          console.warn("[autologin] falhou:", (err as any).message);
-        }
-      }
-    });
-    return () => unsub();
-  }, []);
-
-  // Lista de conversas
+  // ===================================
+  // 💬 Lista de conversas
+  // ===================================
   useEffect(() => {
     if (!user) {
       setChats([]);
@@ -155,7 +135,9 @@ export default function TelaChat() {
     };
   }, [user]);
 
-  // Mensagens em tempo real
+  // ===================================
+  // 📨 Mensagens em tempo real
+  // ===================================
   useEffect(() => {
     if (!selectedChatId) {
       if (unsubMessagesRef.current) unsubMessagesRef.current();
@@ -201,11 +183,13 @@ export default function TelaChat() {
     };
   }, [selectedChatId, chats]);
 
-  // Enviar mensagem
+  // ===================================
+  // ✉️ Enviar mensagem
+  // ===================================
   const handleSend = async () => {
     if (!inputMessage.trim()) return;
     if (!user || !selectedChatId) {
-      Alert.alert("Erro", "Selecione uma conversa e faça login.");
+      showToast("Selecione uma conversa e faça login.", "error");
       return;
     }
 
@@ -229,20 +213,22 @@ export default function TelaChat() {
       Keyboard.dismiss();
     } catch (err) {
       console.error("Erro ao enviar mensagem:", err);
-      Alert.alert("Erro", "Não foi possível enviar a mensagem.");
+      showToast("Não foi possível enviar a mensagem.", "error");
     }
   };
 
-  // Criar nova conversa
+  // ===================================
+  // 🆕 Criar nova conversa
+  // ===================================
   const handleCreateChat = async () => {
     try {
       console.log("[createChat] iniciando...", { newEmail, newInitialMessage });
       if (!newEmail || !newEmail.trim()) {
-        Alert.alert("Atenção", "Digite um e-mail válido para o destinatário.");
+        showToast("Digite um e-mail válido para o destinatário.", "warning");
         return;
       }
       if (!user) {
-        Alert.alert("Atenção", "Você precisa estar logado para criar uma conversa.");
+        showToast("Você precisa estar logado para criar uma conversa.", "warning");
         return;
       }
 
@@ -256,10 +242,7 @@ export default function TelaChat() {
 
       if (usersSnap.empty) {
         console.log("[createChat] usuário não encontrado:", emailNormalized);
-        Alert.alert(
-          "Usuário não encontrado",
-          "O usuário com esse e-mail não está cadastrado. Peça para ele se cadastrar."
-        );
+        showToast("O usuário com esse e-mail não está cadastrado. Peça para ele se cadastrar.", "error");
         setCreatingChat(false);
         return;
       }
@@ -276,7 +259,7 @@ export default function TelaChat() {
           c.participants.includes(otherUid)
       );
       if (existing) {
-        Alert.alert("Já existe", "Uma conversa com esse usuário já existe.");
+        showToast("Uma conversa com esse usuário já existe.", "info");
         setModalVisible(false);
         setCreatingChat(false);
         setSelectedChatId(existing.id);
@@ -318,15 +301,17 @@ export default function TelaChat() {
       setNewInitialMessage("");
       setSelectedChatId(chatRef.id);
       setCreatingChat(false);
-      Alert.alert("Conversa criada", "Conversa criada com sucesso!");
+      showToast("Conversa criada com sucesso!", "success");
     } catch (error) {
       console.error("[createChat] erro:", error);
-      Alert.alert("Erro", "Falha ao criar conversa. Verifique o console.");
+      showToast("Falha ao criar conversa. Verifique o console.", "error");
       setCreatingChat(false);
     }
   };
 
-  // Renders
+  // ===================================
+  // 🧩 Renders
+  // ===================================
   const renderChatItem = ({ item }: { item: Chat }) => (
     <TouchableOpacity style={styles.chatItem} onPress={() => setSelectedChatId(item.id)}>
       <Image
@@ -360,7 +345,9 @@ export default function TelaChat() {
     </View>
   );
 
-  // Tela de Lista
+  // ===================================
+  // 📱 Tela de Lista
+  // ===================================
   if (!selectedChatId) {
     return (
       <SafeAreaView style={styles.container}>
@@ -437,7 +424,9 @@ export default function TelaChat() {
     );
   }
 
-  // Tela de Chat Aberto
+  // ===================================
+  // 🧾 Tela de Chat Aberto
+  // ===================================
   const meta = chats.find((c) => c.id === selectedChatId) || selectedMeta || {};
   const chatTitle = meta.title || "Conversa";
 
@@ -491,11 +480,20 @@ export default function TelaChat() {
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
+
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onHide={() => setToastVisible(false)}
+      />
     </View>
   );
 }
 
-// Estilos
+// ======================
+// 💅 Estilos
+// ======================
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   chatContainer: { flex: 1, backgroundColor: "#1B5E20" },

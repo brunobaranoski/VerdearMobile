@@ -8,3 +8,4 @@ export { default as Logo } from '../layout/Logo';
 export { default as Button } from '../ui/Button';
 export { default as Input } from '../ui/Input';
 export { default as Tab } from '../ui/Tab';
+export { default as Toast } from '../ui/Toast';

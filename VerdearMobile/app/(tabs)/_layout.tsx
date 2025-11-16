@@ -1,7 +1,33 @@
+import { useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import { ActivityIndicator, View } from "react-native";
 
 export default function TabLayout() {
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    // Se terminou de carregar e não há usuário autenticado, redireciona para login
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [user, loading]);
+
+  // Mostra loading enquanto verifica autenticação
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#1B5E20" />
+      </View>
+    );
+  }
+
+  // Se não estiver autenticado, não renderiza as tabs (será redirecionado)
+  if (!user) {
+    return null;
+  }
+
   return (
     <Tabs
       screenOptions={{
