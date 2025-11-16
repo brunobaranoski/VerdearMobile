@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { AuthProvider } from './context/AuthContext';
 
 // Previne que a splash screen seja escondida automaticamente
 SplashScreen.preventAutoHideAsync();
@@ -27,10 +28,12 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }} initialRouteName="login">
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="cadastro" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <AuthProvider>
+      <Stack screenOptions={{ headerShown: false }} initialRouteName="login">
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="cadastro" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </AuthProvider>
   );
 }
