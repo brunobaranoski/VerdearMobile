@@ -1,6 +1,3 @@
-// app/tabs/TelaChat.tsx
-// ✅ Versão TypeScript corrigida, funcional e com login automático temporário (admin@gmail.com / greener)
-
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -38,9 +35,7 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 
-// ======================
-// 🔰 Tipos TypeScript
-// ======================
+
 type Message = {
   id?: string;
   from: string;
@@ -58,9 +53,7 @@ type Chat = {
   avatar?: string | null;
 };
 
-// ======================
-// 🚀 Componente principal
-// ======================
+
 export default function TelaChat() {
   const [user, setUser] = useState<any>(null);
   const [chats, setChats] = useState<Chat[]>([]);
@@ -87,15 +80,13 @@ export default function TelaChat() {
   const TEST_EMAIL = "admin@gmail.com";
   const TEST_PASS = "greener";
 
-  // ===================================
-  // 🔐 Autenticação
-  // ===================================
+  // Autenticação
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
 
-        // garante users/{uid}
         try {
           const userRef = doc(db, "users", u.uid);
           const snap = await getDoc(userRef);
@@ -126,9 +117,7 @@ export default function TelaChat() {
     return () => unsub();
   }, []);
 
-  // ===================================
-  // 💬 Lista de conversas
-  // ===================================
+  // Lista de conversas
   useEffect(() => {
     if (!user) {
       setChats([]);
@@ -166,9 +155,7 @@ export default function TelaChat() {
     };
   }, [user]);
 
-  // ===================================
-  // 📨 Mensagens em tempo real
-  // ===================================
+  // Mensagens em tempo real
   useEffect(() => {
     if (!selectedChatId) {
       if (unsubMessagesRef.current) unsubMessagesRef.current();
@@ -214,9 +201,7 @@ export default function TelaChat() {
     };
   }, [selectedChatId, chats]);
 
-  // ===================================
-  // ✉️ Enviar mensagem
-  // ===================================
+  // Enviar mensagem
   const handleSend = async () => {
     if (!inputMessage.trim()) return;
     if (!user || !selectedChatId) {
@@ -248,9 +233,7 @@ export default function TelaChat() {
     }
   };
 
-  // ===================================
-  // 🆕 Criar nova conversa
-  // ===================================
+  // Criar nova conversa
   const handleCreateChat = async () => {
     try {
       console.log("[createChat] iniciando...", { newEmail, newInitialMessage });
@@ -343,9 +326,7 @@ export default function TelaChat() {
     }
   };
 
-  // ===================================
-  // 🧩 Renders
-  // ===================================
+  // Renders
   const renderChatItem = ({ item }: { item: Chat }) => (
     <TouchableOpacity style={styles.chatItem} onPress={() => setSelectedChatId(item.id)}>
       <Image
@@ -379,9 +360,7 @@ export default function TelaChat() {
     </View>
   );
 
-  // ===================================
-  // 📱 Tela de Lista
-  // ===================================
+  // Tela de Lista
   if (!selectedChatId) {
     return (
       <SafeAreaView style={styles.container}>
@@ -458,9 +437,7 @@ export default function TelaChat() {
     );
   }
 
-  // ===================================
-  // 🧾 Tela de Chat Aberto
-  // ===================================
+  // Tela de Chat Aberto
   const meta = chats.find((c) => c.id === selectedChatId) || selectedMeta || {};
   const chatTitle = meta.title || "Conversa";
 
@@ -518,9 +495,7 @@ export default function TelaChat() {
   );
 }
 
-// ======================
-// 💅 Estilos
-// ======================
+// Estilos
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   chatContainer: { flex: 1, backgroundColor: "#1B5E20" },
