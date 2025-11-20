@@ -1,5 +1,4 @@
-// app/tabs/TelaChat.tsx
-// ✅ Versão TypeScript corrigida, funcional e com login automático temporário (admin@gmail.com / greener)
+
 
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -17,6 +16,7 @@ import {
   ActivityIndicator,
   Modal,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Toast } from "../../components/shared/Index";
@@ -30,19 +30,17 @@ import {
   orderBy,
   addDoc,
   doc,
-  setDoc,
   updateDoc,
   serverTimestamp,
   getDocs,
   getDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 
-// ======================
-// 🔰 Tipos TypeScript
-// ======================
+// Tipos typeScript
 type Message = {
-  id?: string;
+  id: string;
   from: string;
   text: string;
   createdAt?: Date | null;
@@ -54,13 +52,12 @@ type Chat = {
   participants: string[];
   lastMessage?: string;
   lastUpdated?: Date | null;
-  title?: string | null;
-  avatar?: string | null;
+  titles?: { [uid: string]: string };
+  avatars?: { [uid: string]: string | null };
 };
 
-// ======================
-// 🚀 Componente principal
-// ======================
+
+// Componente principal
 export default function TelaChat() {
   const { user } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
@@ -81,23 +78,27 @@ export default function TelaChat() {
 
   // Estados do Toast
   const [toastVisible, setToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info' | 'warning'>('info');
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "info" | "warning"
+  >("info");
 
-  const unsubChatsRef = useRef<any>(null);
-  const unsubMessagesRef = useRef<any>(null);
-  const flatListRef = useRef<FlatList>(null);
+  const unsubChatsRef = useRef<null | (() => void)>(null);
+  const unsubMessagesRef = useRef<null | (() => void)>(null);
+  const flatListRef = useRef<FlatList<Message>>(null);
 
   // Função helper para mostrar Toast
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" | "warning" = "info"
+  ) => {
     setToastMessage(message);
     setToastType(type);
     setToastVisible(true);
   };
 
-  // ===================================
-  // 💬 Lista de conversas
-  // ===================================
+
+  // Lista de conversas
   useEffect(() => {
     if (!user) {
       setChats([]);
@@ -107,26 +108,41 @@ export default function TelaChat() {
 
     setLoadingChats(true);
 
-    const q = query(
+    const qChats = query(
       collection(db, "chats"),
       where("participants", "array-contains", user.uid),
       orderBy("lastUpdated", "desc")
     );
 
     if (unsubChatsRef.current) unsubChatsRef.current();
+
     unsubChatsRef.current = onSnapshot(
-      q,
+      qChats,
       (snapshot) => {
-        const arr: Chat[] = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as Chat),
-        }));
-        setChats(arr);
-        setLoadingChats(false);
+        try {
+          const arr: Chat[] = snapshot.docs.map((d) => {
+            const data = d.data() as any;
+            return {
+              id: d.id,
+              participants: data.participants || [],
+              lastMessage: data.lastMessage || "",
+              lastUpdated: data.lastUpdated ? data.lastUpdated.toDate() : null,
+              titles: data.titles || {},
+              avatars: data.avatars || {},
+            };
+          });
+          setChats(arr);
+          setLoadingChats(false);
+        } catch (err) {
+          console.error("Erro ao processar chats:", err);
+          setLoadingChats(false);
+          showToast("Não foi possível carregar as conversas.", "error");
+        }
       },
       (err) => {
         console.error("Erro ao carregar chats:", err);
         setLoadingChats(false);
+        showToast("Não foi possível carregar as conversas.", "error");
       }
     );
 
@@ -135,9 +151,7 @@ export default function TelaChat() {
     };
   }, [user]);
 
-  // ===================================
-  // 📨 Mensagens em tempo real
-  // ===================================
+  // Mensagens em tempo real
   useEffect(() => {
     if (!selectedChatId) {
       if (unsubMessagesRef.current) unsubMessagesRef.current();
@@ -152,14 +166,15 @@ export default function TelaChat() {
     setSelectedMeta(meta);
 
     const messagesCol = collection(db, "chats", selectedChatId, "messages");
-    const q = query(messagesCol, orderBy("createdAt", "asc"));
+    const qMessages = query(messagesCol, orderBy("createdAt", "asc"));
 
     if (unsubMessagesRef.current) unsubMessagesRef.current();
+
     unsubMessagesRef.current = onSnapshot(
-      q,
+      qMessages,
       (snapshot) => {
         const msgs: Message[] = snapshot.docs.map((d) => {
-          const data = d.data();
+          const data = d.data() as any;
           return {
             id: d.id,
             from: data.from,
@@ -170,11 +185,15 @@ export default function TelaChat() {
         });
         setMessages(msgs);
         setLoadingMessages(false);
-        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 120);
+        setTimeout(
+          () => flatListRef.current?.scrollToEnd({ animated: true }),
+          120
+        );
       },
       (err) => {
         console.error("Erro ao carregar mensagens:", err);
         setLoadingMessages(false);
+        showToast("Não foi possível carregar as mensagens.", "error");
       }
     );
 
@@ -183,9 +202,7 @@ export default function TelaChat() {
     };
   }, [selectedChatId, chats]);
 
-  // ===================================
-  // ✉️ Enviar mensagem
-  // ===================================
+  // Enviar mensagem
   const handleSend = async () => {
     if (!inputMessage.trim()) return;
     if (!user || !selectedChatId) {
@@ -217,9 +234,58 @@ export default function TelaChat() {
     }
   };
 
-  // ===================================
-  // 🆕 Criar nova conversa
-  // ===================================
+  // Apagar / encerrar conversa
+  const handleDeleteChat = async () => {
+    if (!selectedChatId) return;
+
+    try {
+      const chatRef = doc(db, "chats", selectedChatId);
+      const messagesCol = collection(chatRef, "messages");
+      const messagesSnap = await getDocs(messagesCol);
+
+      const deletions = messagesSnap.docs.map((m) => deleteDoc(m.ref));
+      await Promise.all(deletions);
+
+      await deleteDoc(chatRef);
+
+      showToast("Conversa encerrada com sucesso.", "success");
+      setSelectedChatId(null);
+    } catch (err: any) {
+      console.error("Erro ao apagar conversa:", err);
+      showToast("Não foi possível encerrar a conversa.", "error");
+    }
+  };
+
+  const confirmDeleteChat = () => {
+    if (!selectedChatId) return;
+
+    // Tratamento especial para web
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "Deseja realmente apagar esta conversa? Isso irá remover todas as mensagens."
+      );
+      if (confirmed) {
+        handleDeleteChat();
+      }
+      return;
+    }
+
+    // Mobile usa alert nativo
+    Alert.alert(
+      "Encerrar conversa",
+      "Deseja realmente apagar esta conversa? Isso irá remover todas as mensagens.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Encerrar",
+          style: "destructive",
+          onPress: handleDeleteChat,
+        },
+      ]
+    );
+  };
+
+  // Criar nova conversa
   const handleCreateChat = async () => {
     try {
       console.log("[createChat] iniciando...", { newEmail, newInitialMessage });
@@ -228,30 +294,45 @@ export default function TelaChat() {
         return;
       }
       if (!user) {
-        showToast("Você precisa estar logado para criar uma conversa.", "warning");
+        showToast(
+          "Você precisa estar logado para criar uma conversa.",
+          "warning"
+        );
         return;
       }
 
       setCreatingChat(true);
       const emailNormalized = newEmail.trim().toLowerCase();
 
-      // buscar user por email
       const usersRef = collection(db, "users");
       const usersQuery = query(usersRef, where("email", "==", emailNormalized));
       const usersSnap = await getDocs(usersQuery);
 
       if (usersSnap.empty) {
         console.log("[createChat] usuário não encontrado:", emailNormalized);
-        showToast("O usuário com esse e-mail não está cadastrado. Peça para ele se cadastrar.", "error");
+        showToast(
+          "O usuário com esse e-mail não está cadastrado. Peça para ele se cadastrar.",
+          "error"
+        );
         setCreatingChat(false);
         return;
       }
 
       const otherDoc = usersSnap.docs[0];
       const otherUid = otherDoc.id;
-      const otherData = otherDoc.data();
+      const otherData = otherDoc.data() as any;
 
-      // checar chat existente
+      let meData: any = null;
+      try {
+        const meDoc = await getDoc(doc(db, "users", user.uid));
+        if (meDoc.exists()) meData = meDoc.data();
+      } catch (e) {
+        console.warn(
+          "[createChat] não foi possível ler dados do usuário atual",
+          e
+        );
+      }
+
       const existing = chats.find(
         (c) =>
           c.participants &&
@@ -266,14 +347,25 @@ export default function TelaChat() {
         return;
       }
 
-      // criar novo chat
+      const titles: { [uid: string]: string } = {
+        [user.uid]:
+          otherData?.name || otherData?.email || "Contato",
+        [otherUid]:
+          meData?.name || meData?.email || user.email || "Contato",
+      };
+
+      const avatars: { [uid: string]: string | null } = {
+        [user.uid]: otherData?.avatar || null,
+        [otherUid]: meData?.avatar || null,
+      };
+
       const firstText = newInitialMessage.trim() || "Olá!";
       const chatRef = await addDoc(collection(db, "chats"), {
         participants: [user.uid, otherUid],
         lastMessage: firstText,
         lastUpdated: serverTimestamp(),
-        title: otherData?.name || otherData?.email || "Contato",
-        avatar: otherData?.avatar || null,
+        titles,
+        avatars,
       });
 
       await addDoc(collection(db, "chats", chatRef.id, "messages"), {
@@ -282,19 +374,6 @@ export default function TelaChat() {
         createdAt: serverTimestamp(),
         type: "text",
       });
-
-      // força aparecer na lista local
-      setChats((prev) => [
-        {
-          id: chatRef.id,
-          participants: [user.uid, otherUid],
-          lastMessage: firstText,
-          lastUpdated: new Date(),
-          title: otherData?.name || otherData?.email || "Contato",
-          avatar: otherData?.avatar || null,
-        },
-        ...prev,
-      ]);
 
       setModalVisible(false);
       setNewEmail("");
@@ -309,26 +388,45 @@ export default function TelaChat() {
     }
   };
 
-  // ===================================
-  // 🧩 Renders
-  // ===================================
-  const renderChatItem = ({ item }: { item: Chat }) => (
-    <TouchableOpacity style={styles.chatItem} onPress={() => setSelectedChatId(item.id)}>
-      <Image
-        source={{ uri: item.avatar || `https://i.pravatar.cc/150?u=${item.id}` }}
-        style={styles.avatar}
-      />
-      <View style={{ flex: 1 }}>
-        <Text style={styles.chatName}>{item.title}</Text>
-        <Text style={styles.chatPreview} numberOfLines={1}>
-          {item.lastMessage}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  // Renders
+  const getChatTitleForUser = (chat: Chat): string => {
+    if (!user) return "Conversa";
+    return chat.titles?.[user.uid] || "Conversa";
+  };
+
+  const getChatAvatarForUser = (chat: Chat): string | undefined => {
+    if (!user) return undefined;
+    return chat.avatars?.[user.uid] || undefined;
+  };
+
+  const renderChatItem = ({ item }: { item: Chat }) => {
+    const title = getChatTitleForUser(item);
+    const avatarUri =
+      getChatAvatarForUser(item) || `https://i.pravatar.cc/150?u=${item.id}`;
+
+    return (
+      <TouchableOpacity
+        style={styles.chatItem}
+        onPress={() => setSelectedChatId(item.id)}
+      >
+        <Image source={{ uri: avatarUri }} style={styles.avatar} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.chatName}>{title}</Text>
+          <Text style={styles.chatPreview} numberOfLines={1}>
+            {item.lastMessage}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderMessage = ({ item }: { item: Message }) => (
-    <View style={[styles.message, item.from === user?.uid ? styles.user : styles.bot]}>
+    <View
+      style={[
+        styles.message,
+        item.from === user?.uid ? styles.user : styles.bot,
+      ]}
+    >
       <Text
         style={[
           styles.messageText,
@@ -339,15 +437,16 @@ export default function TelaChat() {
       </Text>
       {item.createdAt && (
         <Text style={styles.timestamp}>
-          {item.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {item.createdAt.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </Text>
       )}
     </View>
   );
 
-  // ===================================
-  // 📱 Tela de Lista
-  // ===================================
+  // Tela de Lista
   if (!selectedChatId) {
     return (
       <SafeAreaView style={styles.container}>
@@ -356,16 +455,23 @@ export default function TelaChat() {
           <Ionicons name="chatbubbles-outline" size={24} color="#1B5E20" />
           <View style={{ marginLeft: 8, flex: 1 }}>
             <Text style={styles.headerTitle}>Conversas</Text>
-            <Text style={styles.headerSubtitle}>Toque para abrir ou criar nova conversa</Text>
+            <Text style={styles.headerSubtitle}>
+              Toque para abrir ou criar nova conversa
+            </Text>
           </View>
 
-          <TouchableOpacity style={styles.newChatButton} onPress={() => setModalVisible(true)}>
+          <TouchableOpacity
+            style={styles.newChatButton}
+            onPress={() => setModalVisible(true)}
+          >
             <Ionicons name="add-circle-outline" size={28} color="#1B5E20" />
           </TouchableOpacity>
         </View>
 
         {loadingChats ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
             <ActivityIndicator size="large" color="#1B5E20" />
           </View>
         ) : (
@@ -381,7 +487,9 @@ export default function TelaChat() {
         <Modal animationType="slide" visible={modalVisible} transparent>
           <View style={modalStyles.overlay}>
             <View style={modalStyles.modal}>
-              <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 8 }}>
+              <Text
+                style={{ fontSize: 18, fontWeight: "600", marginBottom: 8 }}
+              >
                 Nova conversa
               </Text>
               <TextInput
@@ -400,7 +508,13 @@ export default function TelaChat() {
                 multiline
               />
 
-              <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 12 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-end",
+                  marginTop: 12,
+                }}
+              >
                 <TouchableOpacity
                   onPress={() => {
                     setModalVisible(false);
@@ -408,10 +522,15 @@ export default function TelaChat() {
                     setNewInitialMessage("");
                   }}
                 >
-                  <Text style={{ marginRight: 16, color: "#666" }}>Cancelar</Text>
+                  <Text style={{ marginRight: 16, color: "#666" }}>
+                    Cancelar
+                  </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={handleCreateChat} disabled={creatingChat}>
+                <TouchableOpacity
+                  onPress={handleCreateChat}
+                  disabled={creatingChat}
+                >
                   <Text style={{ color: "#1B5E20", fontWeight: "600" }}>
                     {creatingChat ? "Criando..." : "Criar"}
                   </Text>
@@ -420,36 +539,61 @@ export default function TelaChat() {
             </View>
           </View>
         </Modal>
+
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          visible={toastVisible}
+          onHide={() => setToastVisible(false)}
+        />
       </SafeAreaView>
     );
   }
 
-  // ===================================
-  // 🧾 Tela de Chat Aberto
-  // ===================================
-  const meta = chats.find((c) => c.id === selectedChatId) || selectedMeta || {};
-  const chatTitle = meta.title || "Conversa";
+  // Tela de chat aberto
+  const meta =
+    chats.find((c) => c.id === selectedChatId) || selectedMeta || null;
+
+  const headerTitle = meta ? getChatTitleForUser(meta) : "Conversa";
+  const headerAvatarUri =
+    (meta && getChatAvatarForUser(meta)) ||
+    `https://i.pravatar.cc/150?u=${meta?.id || "anon"}`;
 
   return (
     <View style={styles.chatContainer}>
       <StatusBar backgroundColor="#1B5E20" barStyle="light-content" />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <SafeAreaView style={{ flex: 1 }}>
           <View style={styles.chatHeader}>
             <TouchableOpacity onPress={() => setSelectedChatId(null)}>
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
+
             <Image
-              source={{
-                uri: meta.avatar || `https://i.pravatar.cc/150?u=${meta.id || "anon"}`,
-              }}
+              source={{ uri: headerAvatarUri }}
               style={styles.headerAvatar}
             />
-            <Text style={styles.chatHeaderTitle}>{chatTitle}</Text>
+            <Text style={styles.chatHeaderTitle}>{headerTitle}</Text>
+
+            <TouchableOpacity
+              onPress={confirmDeleteChat}
+              style={{ marginLeft: "auto" }}
+            >
+              <Ionicons name="trash-outline" size={22} color="#fff" />
+            </TouchableOpacity>
           </View>
 
           {loadingMessages ? (
-            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               <ActivityIndicator size="large" color="#1B5E20" />
             </View>
           ) : (
@@ -457,7 +601,7 @@ export default function TelaChat() {
               ref={flatListRef}
               data={messages}
               renderItem={renderMessage}
-              keyExtractor={(item) => item.id || Math.random().toString()}
+              keyExtractor={(item) => item.id}
               contentContainerStyle={styles.messagesContainer}
               showsVerticalScrollIndicator={false}
             />
@@ -491,9 +635,7 @@ export default function TelaChat() {
   );
 }
 
-// ======================
-// 💅 Estilos
-// ======================
+// Estilos
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   chatContainer: { flex: 1, backgroundColor: "#1B5E20" },
@@ -538,7 +680,12 @@ const styles = StyleSheet.create({
   bot: { backgroundColor: "#EAE7E1", alignSelf: "flex-start" },
   user: { backgroundColor: "#1B5E20", alignSelf: "flex-end" },
   messageText: { fontSize: 15 },
-  timestamp: { fontSize: 10, color: "#666", marginTop: 4, alignSelf: "flex-end" },
+  timestamp: {
+    fontSize: 10,
+    color: "#666",
+    marginTop: 4,
+    alignSelf: "flex-end",
+  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
