@@ -1,0 +1,157 @@
+{
+  "users": [
+    {
+      "id": "3MgPjYEbrgSmtLaAcJ7N",
+      "name": "Verdear Teste",
+      "email": "verdear@gmail.com",
+      "avatar": "https://i.pravatar.cc/150?u=verdear@gmail.com"
+    },
+    {
+      "id": "DUmwhCRyo2SdIxoiMVvbkBuKuYK2",
+      "cpfCnpj": "98281290005",
+      "name": "Testando Criação",
+      "avatar": "",
+      "userType": "Vendedor",
+      "createdAt": "2025-11-20T13:56:13.090Z",
+      "email": "testando@gmail.com",
+      "phone": "46998062145"
+    },
+    {
+      "id": "TQQ53YSK7Ia9Nd8WmHbGyKYEYsy2",
+      "name": "teste da silva 2",
+      "userType": "Vendedor",
+      "avatar": "https://i.pravatar.cc/150?u=teste%40fmail.com",
+      "createdAt": "2025-11-16T20:48:38.612Z",
+      "email": "teste@fmail.com",
+      "cpfCnpj": "04645089080",
+      "phone": "55992013039"
+    },
+    {
+      "id": "TorbCCV0dMUVxfwFIL5Be6VSZok2",
+      "state": "SP",
+      "phone": "46991256321",
+      "userType": "Comprador",
+      "bio": "danone",
+      "createdAt": "2025-11-16T21:47:18.161Z",
+      "address": "tests",
+      "cep": "85660000",
+      "addressNumber": "123",
+      "email": "tais.2003@alunos.utfpr.edu.br",
+      "complement": "203",
+      "city": "asdfadsf",
+      "name": "Tais Carvalho dos Santos",
+      "cpfCnpj": "70464759030",
+      "avatar": "https://i.pravatar.cc/150?u=tais.2003%40alunos.utfpr.edu.br"
+    },
+    {
+      "id": "WwmfhTmZ5zWak4i8TsWAUxT3k0y1",
+      "name": "admin",
+      "email": "admin@gmail.com",
+      "createdAt": "2025-11-02T17:12:53.290Z",
+      "avatar": "https://i.pravatar.cc/150?u=admin%40gmail.com"
+    },
+    {
+      "id": "YZvnyofTzWfROuIBAhDA4f12zBQ2",
+      "email": "comprador@gmail.com",
+      "phone": "46991345678",
+      "createdAt": "2025-11-16T20:56:12.703Z",
+      "cpfCnpj": "66192668000",
+      "name": "comprador da silva",
+      "avatar": "https://i.pravatar.cc/150?u=comprador%40gmail.com",
+      "userType": "Comprador"
+    },
+    {
+      "id": "aZE7hxKvkPRRgsl8sSoaLfHUQN73",
+      "createdAt": "2025-11-16T20:29:20.379Z",
+      "email": "teste@teste.gmail.com",
+      "phone": "55992013546",
+      "cpfCnpj": "04645089080",
+      "avatar": "https://i.pravatar.cc/150?u=teste%40teste.gmail.com",
+      "userType": "Comprador",
+      "name": "Teste da Silva"
+    }
+  ],
+  "chats": [
+    {
+      "id": "4T5lRjTPKSspIk5pHi88",
+      "participants": [
+        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
+        "TQQ53YSK7Ia9Nd8WmHbGyKYEYsy2"
+      ],
+      "lastMessage": "opa",
+      "lastUpdated": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1763337597,
+        "nanoseconds": 311000000
+      },
+      "avatar": "https://i.pravatar.cc/150?u=teste%40fmail.com",
+      "title": "teste da silva"
+    },
+    {
+      "id": "TBFdFgXoXnVLKR4uR25V",
+      "participants": [
+        "WwmfhTmZ5zWak4i8TsWAUxT3k0y1",
+        "3MgPjYEbrgSmtLaAcJ7N"
+      ],
+      "lastMessage": "opa",
+      "lastUpdated": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1762726094,
+        "nanoseconds": 657000000
+      },
+      "title": "Verdear Teste",
+      "avatar": "https://i.pravatar.cc/150?u=verdear@gmail.com"
+    },
+    {
+      "id": "bMnw7juqITlGFK8jiKOH",
+      "lastMessage": "opa",
+      "lastUpdated": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1763649085,
+        "nanoseconds": 933000000
+      },
+      "participants": [
+        "DUmwhCRyo2SdIxoiMVvbkBuKuYK2",
+        "YZvnyofTzWfROuIBAhDA4f12zBQ2"
+      ],
+      "avatars": {
+        "DUmwhCRyo2SdIxoiMVvbkBuKuYK2": "https://i.pravatar.cc/150?u=comprador%40gmail.com",
+        "YZvnyofTzWfROuIBAhDA4f12zBQ2": null
+      },
+      "titles": {
+        "DUmwhCRyo2SdIxoiMVvbkBuKuYK2": "comprador da silva",
+        "YZvnyofTzWfROuIBAhDA4f12zBQ2": "Testando Criação"
+      }
+    },
+    {
+      "id": "c8hssXaRRlPp8Dl85L8M",
+      "participants": [
+        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
+        "TorbCCV0dMUVxfwFIL5Be6VSZok2"
+      ],
+      "title": "Tais Carvalho dos Santos",
+      "avatar": "https://i.pravatar.cc/150?u=tais.2003%40alunos.utfpr.edu.br",
+      "lastUpdated": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1763336840,
+        "nanoseconds": 522000000
+      },
+      "lastMessage": "oie"
+    },
+    {
+      "id": "frq2NoZdz6Iw4swe3cDa",
+      "participants": [
+        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
+        "DUmwhCRyo2SdIxoiMVvbkBuKuYK2"
+      ],
+      "avatar": null,
+      "title": "Testando Criação",
+      "lastUpdated": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1763648125,
+        "nanoseconds": 807000000
+      },
+      "lastMessage": "Oi"
+    }
+  ]
+}
