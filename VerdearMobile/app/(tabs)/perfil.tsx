@@ -1,4 +1,4 @@
-// PerfilScreen.js
+// perfil.tsx
 import PerfilComprador from "@/components/perfil/PerfilComprador";
 import PerfilVendedor from "@/components/perfil/PerfilVendedor";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,68 +22,30 @@ import {
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
+// >>> IMPORT FIREBASE / FIRESTORE (igual ao chat.tsx) <<<
+import { db } from "../firebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  query,
+  where,
+} from "firebase/firestore";
+
 /*
   Mantém layout original. Painel Admin (modal) acessível por long-press no logo.
-  Adicionado: botão "Excluir produto" acima do formulário de cadastro -> permite seleção múltipla
-  de cards e exclusão em massa.
+  Adicionado antes: botão "Excluir produto" para seleção múltipla.
+  Agora: produtos passam a ser salvos no Firestore (coleção "products").
 */
 
-/* ---------- Backend local (AsyncStorage) ---------- */
-const KEY_PRODUCTS = "APP_PRODUCTS_V1";
+/* ---------- Backend local APENAS para pedidos (orders) ---------- */
 const KEY_ORDERS = "APP_ORDERS_V1";
 
 const backend = {
-  async _ensureProducts() {
-    const raw = await AsyncStorage.getItem(KEY_PRODUCTS);
-    if (!raw) {
-      const seed = [
-        { id: "p-1", name: "Produto 1", price: 10, description: "Descrição do produto 1", stock: 10, image: null },
-        { id: "p-2", name: "Produto 2", price: 20, description: "Descrição do produto 2", stock: 5, image: null },
-        { id: "p-3", name: "Produto 3", price: 30, description: "Descrição do produto 3", stock: 3, image: null },
-      ];
-      await AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(seed));
-      return seed;
-    }
-    try {
-      return JSON.parse(raw);
-    } catch {
-      await AsyncStorage.removeItem(KEY_PRODUCTS);
-      return this._ensureProducts();
-    }
-  },
-
-  async listProducts() {
-    return (await this._ensureProducts()).slice();
-  },
-
-  async addProduct(product) {
-    const arr = await this._ensureProducts();
-    arr.push(product);
-    await AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(arr));
-    return product;
-  },
-
-  async updateProduct(id, updates) {
-    const arr = await this._ensureProducts();
-    const idx = arr.findIndex((p) => p.id === id);
-    if (idx === -1) throw new Error("Produto não encontrado");
-    arr[idx] = { ...arr[idx], ...updates };
-    await AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(arr));
-    return arr[idx];
-  },
-
-  async deleteProduct(id) {
-    let arr = await this._ensureProducts();
-    arr = arr.filter((p) => p.id !== id);
-    await AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(arr));
-  },
-
-  async deleteProductsBulk(ids = []) {
-    let arr = await this._ensureProducts();
-    arr = arr.filter((p) => !ids.includes(p.id));
-    await AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(arr));
-  },
-
   async _ensureOrders() {
     const raw = await AsyncStorage.getItem(KEY_ORDERS);
     if (!raw) {
@@ -116,16 +78,17 @@ const backend = {
 export default function PerfilScreen() {
   const { userData, loading } = useAuth();
   const userType = userData?.userType || "Comprador";
+  const sellerId = userData?.uid ?? null;
 
   // Admin modal state
   const [adminVisible, setAdminVisible] = useState(false);
 
   // Products + loading
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
 
   // Orders + loading
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   // Add product form
@@ -133,38 +96,240 @@ export default function PerfilScreen() {
   const [prodPrice, setProdPrice] = useState("");
   const [prodDesc, setProdDesc] = useState("");
   const [prodStock, setProdStock] = useState("");
-  const [prodImageDataUri, setProdImageDataUri] = useState(null);
+  const [prodImageDataUri, setProdImageDataUri] = useState<string | null>(null);
   const [addingProduct, setAddingProduct] = useState(false);
 
   // Edit modal
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editStock, setEditStock] = useState("");
-  const [editImageDataUri, setEditImageDataUri] = useState(null);
+  const [editImageDataUri, setEditImageDataUri] = useState<string | null>(null);
 
   // Selection mode for bulk delete
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]); // array of ids
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // array of ids
 
   useEffect(() => {
-    // keep UI unchanged until admin modal opened
+    // layout original: nada aqui
   }, []);
 
-  // load products
+  /* ---------- PRODUCTS NO FIRESTORE ---------- */
+
+  // load products from Firestore
   const loadProducts = async () => {
+    if (!sellerId) {
+      Alert.alert("Erro", "Usuário não identificado para carregar produtos.");
+      setProducts([]);
+      return;
+    }
+
     setProductsLoading(true);
     try {
-      const list = await backend.listProducts();
+      const productsCol = collection(db, "products");
+
+      // apenas produtos deste vendedor
+      const qProducts = query(productsCol, where("sellerId", "==", sellerId));
+      const snap = await getDocs(qProducts);
+
+      const list = snap.docs.map((d) => {
+        const data = d.data() as any;
+        return {
+          id: d.id,
+          name: data.name,
+          price: data.price,
+          description: data.description,
+          stock: data.stock,
+          image: data.image ?? null,
+          sellerId: data.sellerId ?? null,
+        };
+      });
+
       setProducts(list);
     } catch (err) {
-      console.error("Erro listar produtos", err);
+      console.error("Erro listar produtos Firestore", err);
       Alert.alert("Erro", "Não foi possível carregar o catálogo.");
     } finally {
       setProductsLoading(false);
     }
   };
+
+  // add product -> Firestore
+  const handleAddProduct = async () => {
+    if (!sellerId) {
+      Alert.alert("Erro", "Usuário não identificado para cadastrar produto.");
+      return;
+    }
+
+    if (!prodName || prodName.trim().length < 2) {
+      Alert.alert("Nome inválido", "Informe um nome com ao menos 2 caracteres.");
+      return;
+    }
+    const priceNum = Number(prodPrice);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      Alert.alert("Preço inválido", "Informe um preço válido (> 0).");
+      return;
+    }
+    const stockNum = Number(prodStock);
+    if (isNaN(stockNum) || stockNum < 0) {
+      Alert.alert("Estoque inválido", "Informe um estoque válido (0 ou mais).");
+      return;
+    }
+
+    try {
+      setAddingProduct(true);
+
+      const productsCol = collection(db, "products");
+
+      await addDoc(productsCol, {
+        name: prodName.trim(),
+        price: priceNum,
+        description: prodDesc.trim(),
+        stock: stockNum,
+        image: prodImageDataUri || null,
+        sellerId,
+        createdAt: serverTimestamp(),
+      });
+
+      Alert.alert("Sucesso", `Produto "${prodName.trim()}" cadastrado no Firebase.`);
+
+      // limpar form
+      setProdName("");
+      setProdPrice("");
+      setProdDesc("");
+      setProdStock("");
+      setProdImageDataUri(null);
+
+      await loadProducts();
+    } catch (err) {
+      console.error("Erro add product Firestore", err);
+      Alert.alert("Erro", "Não foi possível cadastrar o produto.");
+    } finally {
+      setAddingProduct(false);
+    }
+  };
+
+  // open edit modal
+  const openEditModal = (product: any) => {
+    setEditingProduct(product);
+    setEditName(product.name);
+    setEditPrice(String(product.price));
+    setEditStock(String(product.stock));
+    setEditImageDataUri(product.image || null);
+    setEditModalVisible(true);
+  };
+
+  // save edit -> Firestore
+  const saveEditProduct = async () => {
+    if (!editingProduct) return;
+    if (!editName || editName.trim().length < 2) {
+      Alert.alert("Nome inválido");
+      return;
+    }
+    const priceNum = Number(editPrice);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      Alert.alert("Preço inválido");
+      return;
+    }
+    const stockNum = Number(editStock);
+    if (isNaN(stockNum) || stockNum < 0) {
+      Alert.alert("Estoque inválido");
+      return;
+    }
+
+    try {
+      const productRef = doc(db, "products", editingProduct.id);
+      await updateDoc(productRef, {
+        name: editName.trim(),
+        price: priceNum,
+        stock: stockNum,
+        image: editImageDataUri || null,
+        updatedAt: serverTimestamp(),
+      });
+
+      Alert.alert("Sucesso", "Produto atualizado no Firebase.");
+      setEditModalVisible(false);
+      setEditingProduct(null);
+      await loadProducts();
+    } catch (err) {
+      console.error("Erro update product Firestore", err);
+      Alert.alert("Erro", "Não foi possível atualizar o produto.");
+    }
+  };
+
+  // single delete with confirmation -> Firestore
+  const handleDeleteProduct = async (id: string) => {
+    Alert.alert("Confirmar exclusão", "Deseja realmente excluir este produto?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const productRef = doc(db, "products", id);
+            await deleteDoc(productRef);
+            await loadProducts();
+            Alert.alert("Removido", "Produto removido com sucesso do Firebase.");
+          } catch (err) {
+            console.error("Erro delete product Firestore", err);
+            Alert.alert("Erro", "Não foi possível remover o produto.");
+          }
+        },
+      },
+    ]);
+  };
+
+  // toggle selection of a product
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      return [...prev, id];
+    });
+  };
+
+  // clear selection mode
+  const cancelSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds([]);
+  };
+
+  // bulk delete selected items -> Firestore
+  const deleteSelectedBulk = () => {
+    if (!selectedIds.length) {
+      Alert.alert("Nenhum produto selecionado", "Marque ao menos um produto para excluir.");
+      return;
+    }
+    Alert.alert(
+      "Excluir selecionados",
+      `Tem certeza que deseja excluir ${selectedIds.length} produto(s)?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await Promise.all(
+                selectedIds.map((id) => {
+                  const productRef = doc(db, "products", id);
+                  return deleteDoc(productRef);
+                })
+              );
+              await loadProducts();
+              cancelSelectionMode();
+              Alert.alert("Removidos", "Produtos excluídos com sucesso do Firebase.");
+            } catch (err) {
+              console.error("Erro bulk delete Firestore", err);
+              Alert.alert("Erro", "Não foi possível excluir os produtos.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  /* ---------- ORDERS (mantidos no AsyncStorage) ---------- */
 
   // load orders
   const loadOrders = async () => {
@@ -180,8 +345,8 @@ export default function PerfilScreen() {
     }
   };
 
-  // pick image as base64
-  const pickImageAsBase64 = async (onPicked) => {
+  // pick image as base64 (mantido)
+  const pickImageAsBase64 = async (onPicked: (uri: string) => void) => {
     try {
       if (Platform.OS !== "web") {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -190,7 +355,7 @@ export default function PerfilScreen() {
           return;
         }
       }
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const result: any = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.6,
         base64: true,
@@ -208,134 +373,7 @@ export default function PerfilScreen() {
     }
   };
 
-  // add product
-  const handleAddProduct = async () => {
-    if (!prodName || prodName.trim().length < 2) {
-      Alert.alert("Nome inválido", "Informe um nome com ao menos 2 caracteres.");
-      return;
-    }
-    const priceNum = Number(prodPrice);
-    if (isNaN(priceNum) || priceNum <= 0) {
-      Alert.alert("Preço inválido", "Informe um preço válido (> 0).");
-      return;
-    }
-    const stockNum = Number(prodStock);
-    if (isNaN(stockNum) || stockNum < 0) {
-      Alert.alert("Estoque inválido", "Informe um estoque válido (0 ou mais).");
-      return;
-    }
-    try {
-      setAddingProduct(true);
-      const id = "p-" + Date.now().toString(36);
-      const created = {
-        id,
-        name: prodName.trim(),
-        price: priceNum,
-        description: prodDesc.trim(),
-        stock: stockNum,
-        image: prodImageDataUri || null,
-      };
-      await backend.addProduct(created);
-      Alert.alert("Sucesso", `Produto "${created.name}" cadastrado.`);
-      // limpar form
-      setProdName(""); setProdPrice(""); setProdDesc(""); setProdStock(""); setProdImageDataUri(null);
-      await loadProducts();
-    } catch (err) {
-      console.error("Erro add product", err);
-      Alert.alert("Erro", "Não foi possível cadastrar o produto.");
-    } finally {
-      setAddingProduct(false);
-    }
-  };
-
-  // open edit modal
-  const openEditModal = (product) => {
-    setEditingProduct(product);
-    setEditName(product.name);
-    setEditPrice(String(product.price));
-    setEditStock(String(product.stock));
-    setEditImageDataUri(product.image || null);
-    setEditModalVisible(true);
-  };
-
-  // save edit
-  const saveEditProduct = async () => {
-    if (!editingProduct) return;
-    if (!editName || editName.trim().length < 2) { Alert.alert("Nome inválido"); return; }
-    const priceNum = Number(editPrice);
-    if (isNaN(priceNum) || priceNum <= 0) { Alert.alert("Preço inválido"); return; }
-    const stockNum = Number(editStock);
-    if (isNaN(stockNum) || stockNum < 0) { Alert.alert("Estoque inválido"); return; }
-    try {
-      await backend.updateProduct(editingProduct.id, { name: editName.trim(), price: priceNum, stock: stockNum, image: editImageDataUri || null });
-      Alert.alert("Sucesso", "Produto atualizado.");
-      setEditModalVisible(false);
-      setEditingProduct(null);
-      await loadProducts();
-    } catch (err) {
-      console.error("Erro update product", err);
-      Alert.alert("Erro", "Não foi possível atualizar o produto.");
-    }
-  };
-
-  // single delete with confirmation
-  const handleDeleteProduct = async (id) => {
-    Alert.alert("Confirmar exclusão", "Deseja realmente excluir este produto?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Excluir", style: "destructive", onPress: async () => {
-          try {
-            await backend.deleteProduct(id);
-            await loadProducts();
-            Alert.alert("Removido", "Produto removido com sucesso.");
-          } catch (err) {
-            console.error("Erro delete product", err);
-            Alert.alert("Erro", "Não foi possível remover o produto.");
-          }
-        } }
-    ]);
-  };
-
-  // toggle selection of a product
-  const toggleSelect = (id) => {
-    setSelectedIds(prev => {
-      if (prev.includes(id)) return prev.filter(x => x !== id);
-      return [...prev, id];
-    });
-  };
-
-  // clear selection mode
-  const cancelSelectionMode = () => {
-    setSelectionMode(false);
-    setSelectedIds([]);
-  };
-
-  // bulk delete selected items
-  const deleteSelectedBulk = () => {
-    if (!selectedIds.length) {
-      Alert.alert("Nenhum produto selecionado", "Marque ao menos um produto para excluir.");
-      return;
-    }
-    Alert.alert(
-      "Excluir selecionados",
-      `Tem certeza que deseja excluir ${selectedIds.length} produto(s)?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Excluir", style: "destructive", onPress: async () => {
-            try {
-              await backend.deleteProductsBulk(selectedIds);
-              await loadProducts();
-              cancelSelectionMode();
-              Alert.alert("Removidos", "Produtos excluídos com sucesso.");
-            } catch (err) {
-              console.error("Erro bulk delete", err);
-              Alert.alert("Erro", "Não foi possível excluir os produtos.");
-            }
-          } }
-      ]
-    );
-  };
-
-  /* ---------- render header (exactly unchanged) ---------- */
+  /* ---------- render header (exatamente como antes) ---------- */
   const renderHeader = () => (
     <>
       <View style={styles.projectHeader}>
@@ -347,7 +385,7 @@ export default function PerfilScreen() {
             await loadOrders();
           }}
         >
-          <Image source={require('../../assets/images/logo_verdear.png')} style={styles.logo} />
+          <Image source={require("../../assets/images/logo_verdear.png")} style={styles.logo} />
         </TouchableOpacity>
 
         <View style={styles.searchContainer}>
@@ -377,29 +415,45 @@ export default function PerfilScreen() {
       {renderHeader()}
 
       {/* layout original preserved */}
-      {userType === 'Vendedor' ? <PerfilVendedor /> : <PerfilComprador />}
+      {userType === "Vendedor" ? <PerfilVendedor /> : <PerfilComprador />}
 
       {/* Admin Modal (oculto) */}
-      <Modal visible={adminVisible} animationType="slide" onRequestClose={() => { setAdminVisible(false); cancelSelectionMode(); }}>
+      <Modal
+        visible={adminVisible}
+        animationType="slide"
+        onRequestClose={() => {
+          setAdminVisible(false);
+          cancelSelectionMode();
+        }}
+      >
         <View style={{ flex: 1 }}>
           <View style={adminStyles.topBar}>
             <Text style={adminStyles.topTitle}>Painel Admin (produtos)</Text>
-            <TouchableOpacity onPress={() => { setAdminVisible(false); cancelSelectionMode(); }} style={{ padding: 10 }}>
-              <Text style={{ color: '#c00' }}>Fechar</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setAdminVisible(false);
+                cancelSelectionMode();
+              }}
+              style={{ padding: 10 }}
+            >
+              <Text style={{ color: "#c00" }}>Fechar</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 16 }}>
             <Text style={adminStyles.sectionTitle}>Catálogo de produtos</Text>
 
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'center' }}>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" }}>
               <TouchableOpacity style={[adminStyles.button, { marginRight: 8 }]} onPress={loadProducts}>
                 <Text style={adminStyles.buttonText}>Recarregar catálogo</Text>
               </TouchableOpacity>
 
-              {/* Novo botão: entrar no modo de seleção para exclusão */}
+              {/* botão seleção múltipla */}
               <TouchableOpacity
-                style={[adminStyles.button, selectionMode ? { backgroundColor: '#c00' } : { backgroundColor: '#38764B' }]}
+                style={[
+                  adminStyles.button,
+                  selectionMode ? { backgroundColor: "#c00" } : { backgroundColor: "#38764B" },
+                ]}
                 onPress={() => {
                   if (selectionMode) cancelSelectionMode();
                   else {
@@ -408,39 +462,48 @@ export default function PerfilScreen() {
                   }
                 }}
               >
-                <Text style={adminStyles.buttonText}>{selectionMode ? "Cancelar exclusão" : "Excluir produto"}</Text>
+                <Text style={adminStyles.buttonText}>
+                  {selectionMode ? "Cancelar exclusão" : "Excluir produto"}
+                </Text>
               </TouchableOpacity>
 
-              {/* Botão excluir em massa aparece apenas em selectionMode */}
               {selectionMode && (
-                <TouchableOpacity style={[adminStyles.button, { backgroundColor: '#f98000', marginLeft: 8 }]} onPress={deleteSelectedBulk}>
+                <TouchableOpacity
+                  style={[adminStyles.button, { backgroundColor: "#f98000", marginLeft: 8 }]}
+                  onPress={deleteSelectedBulk}
+                >
                   <Text style={adminStyles.buttonText}>EXCLUIR SELECIONADOS</Text>
                 </TouchableOpacity>
               )}
             </View>
 
-            {productsLoading ? <ActivityIndicator style={{ marginTop: 12 }} /> : (
+            {productsLoading ? (
+              <ActivityIndicator style={{ marginTop: 12 }} />
+            ) : (
               <View style={{ marginTop: 12 }}>
                 <FlatList
                   data={products}
-                  keyExtractor={p => String(p.id)}
+                  keyExtractor={(p) => String(p.id)}
                   horizontal
                   showsHorizontalScrollIndicator
                   renderItem={({ item }) => {
                     const isSelected = selectedIds.includes(item.id);
                     return (
                       <View style={adminStyles.productCard}>
-                        {/* Checkbox overlay for selection mode (top-left) */}
+                        {/* checkbox seleção múltipla */}
                         {selectionMode && (
                           <TouchableOpacity
-                            style={[adminStyles.checkboxOverlay, isSelected ? adminStyles.checkboxSelected : null]}
+                            style={[
+                              adminStyles.checkboxOverlay,
+                              isSelected ? adminStyles.checkboxSelected : null,
+                            ]}
                             onPress={() => toggleSelect(item.id)}
                           >
                             {isSelected ? <Ionicons name="checkmark" size={18} color="#fff" /> : null}
                           </TouchableOpacity>
                         )}
 
-                        {/* trash icon overlay (top-right) for direct delete as well */}
+                        {/* lixeira individual */}
                         <TouchableOpacity
                           style={adminStyles.trashOverlay}
                           onPress={() => handleDeleteProduct(item.id)}
@@ -453,7 +516,7 @@ export default function PerfilScreen() {
                             <Image source={{ uri: item.image }} style={adminStyles.productImage} />
                           ) : (
                             <View style={adminStyles.imagePlaceholder}>
-                              <Text style={{ color: '#fff' }}>Sem imagem</Text>
+                              <Text style={{ color: "#fff" }}>Sem imagem</Text>
                             </View>
                           )}
                         </View>
@@ -461,21 +524,37 @@ export default function PerfilScreen() {
                         <View style={adminStyles.productInfo}>
                           <Text style={adminStyles.productTitle}>{item.name}</Text>
                           <Text style={adminStyles.productDesc}>{item.description}</Text>
-                          <Text style={{ marginTop: 8, fontWeight: '700' }}>R$ {Number(item.price).toFixed(2)}</Text>
+                          <Text style={{ marginTop: 8, fontWeight: "700" }}>
+                            R$ {Number(item.price).toFixed(2)}
+                          </Text>
                         </View>
 
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                          <TouchableOpacity style={adminStyles.smallBtn} onPress={() => openEditModal(item)}>
-                            <Text style={{ color: '#fff' }}>Editar</Text>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            marginTop: 8,
+                          }}
+                        >
+                          <TouchableOpacity
+                            style={adminStyles.smallBtn}
+                            onPress={() => openEditModal(item)}
+                          >
+                            <Text style={{ color: "#fff" }}>Editar</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity style={[adminStyles.smallBtn, { backgroundColor: '#c00' }]} onPress={() => handleDeleteProduct(item.id)}>
-                            <Text style={{ color: '#fff' }}>Lixeira</Text>
+                          <TouchableOpacity
+                            style={[adminStyles.smallBtn, { backgroundColor: "#c00" }]}
+                            onPress={() => handleDeleteProduct(item.id)}
+                          >
+                            <Text style={{ color: "#fff" }}>Lixeira</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
                     );
                   }}
-                  ListEmptyComponent={<Text style={{ color: '#666' }}>Nenhum produto cadastrado.</Text>}
+                  ListEmptyComponent={
+                    <Text style={{ color: "#666" }}>Nenhum produto cadastrado.</Text>
+                  }
                 />
               </View>
             )}
@@ -483,38 +562,93 @@ export default function PerfilScreen() {
             {/* Add product form */}
             <Text style={[adminStyles.sectionTitle, { marginTop: 20 }]}>Cadastrar produto</Text>
             <Text style={adminStyles.label}>Nome *</Text>
-            <TextInput style={styles.input} value={prodName} onChangeText={setProdName} placeholder="Nome do produto" />
+            <TextInput
+              style={styles.input}
+              value={prodName}
+              onChangeText={setProdName}
+              placeholder="Nome do produto"
+            />
             <Text style={adminStyles.label}>Descrição</Text>
-            <TextInput style={[styles.input, { height: 80 }]} value={prodDesc} onChangeText={setProdDesc} placeholder="Descrição" multiline />
+            <TextInput
+              style={[styles.input, { height: 80 }]}
+              value={prodDesc}
+              onChangeText={setProdDesc}
+              placeholder="Descrição"
+              multiline
+            />
             <Text style={adminStyles.label}>Preço *</Text>
-            <TextInput style={styles.input} value={prodPrice} onChangeText={setProdPrice} keyboardType="numeric" placeholder="19.90" />
+            <TextInput
+              style={styles.input}
+              value={prodPrice}
+              onChangeText={setProdPrice}
+              keyboardType="numeric"
+              placeholder="19.90"
+            />
             <Text style={adminStyles.label}>Estoque *</Text>
-            <TextInput style={styles.input} value={prodStock} onChangeText={setProdStock} keyboardType="numeric" placeholder="0" />
+            <TextInput
+              style={styles.input}
+              value={prodStock}
+              onChangeText={setProdStock}
+              keyboardType="numeric"
+              placeholder="0"
+            />
 
             <Text style={adminStyles.label}>Imagem</Text>
-            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-              <TouchableOpacity style={adminStyles.button} onPress={() => pickImageAsBase64(uri => setProdImageDataUri(uri))}>
-                <Text style={adminStyles.buttonText}>{prodImageDataUri ? 'Trocar imagem' : 'Selecionar imagem'}</Text>
+            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+              <TouchableOpacity
+                style={adminStyles.button}
+                onPress={() => pickImageAsBase64((uri) => setProdImageDataUri(uri))}
+              >
+                <Text style={adminStyles.buttonText}>
+                  {prodImageDataUri ? "Trocar imagem" : "Selecionar imagem"}
+                </Text>
               </TouchableOpacity>
-              {prodImageDataUri ? <Image source={{ uri: prodImageDataUri }} style={{ width: 80, height: 80, borderRadius: 8 }} /> : null}
+              {prodImageDataUri ? (
+                <Image
+                  source={{ uri: prodImageDataUri }}
+                  style={{ width: 80, height: 80, borderRadius: 8 }}
+                />
+              ) : null}
             </View>
 
-            <TouchableOpacity style={[adminStyles.bigSubmit, { marginTop: 16 }]} onPress={handleAddProduct} disabled={addingProduct}>
-              <Text style={adminStyles.bigSubmitText}>{addingProduct ? 'Cadastrando...' : 'CADASTRAR PRODUTO'}</Text>
+            <TouchableOpacity
+              style={[adminStyles.bigSubmit, { marginTop: 16 }]}
+              onPress={handleAddProduct}
+              disabled={addingProduct}
+            >
+              <Text style={adminStyles.bigSubmitText}>
+                {addingProduct ? "Cadastrando..." : "CADASTRAR PRODUTO"}
+              </Text>
             </TouchableOpacity>
 
             {/* Orders */}
             <Text style={[adminStyles.sectionTitle, { marginTop: 24 }]}>Pedidos</Text>
-            <TouchableOpacity style={[adminStyles.button, { alignSelf: 'flex-start', marginTop: 8 }]} onPress={loadOrders}>
+            <TouchableOpacity
+              style={[adminStyles.button, { alignSelf: "flex-start", marginTop: 8 }]}
+              onPress={loadOrders}
+            >
               <Text style={adminStyles.buttonText}>Carregar pedidos</Text>
             </TouchableOpacity>
 
-            {ordersLoading ? <ActivityIndicator /> : (
+            {ordersLoading ? (
+              <ActivityIndicator />
+            ) : (
               <View style={{ marginTop: 12 }}>
-                {orders.length === 0 ? <Text style={{ color: '#666' }}>Nenhum pedido.</Text> : (
-                  orders.map(o => (
-                    <View key={o.id} style={{ padding: 10, borderWidth: 1, borderColor: '#eee', borderRadius: 8, marginBottom: 8 }}>
-                      <Text style={{ fontWeight: '700' }}>Pedido {o.id}</Text>
+                {orders.length === 0 ? (
+                  <Text style={{ color: "#666" }}>Nenhum pedido.</Text>
+                ) : (
+                  orders.map((o) => (
+                    <View
+                      key={o.id}
+                      style={{
+                        padding: 10,
+                        borderWidth: 1,
+                        borderColor: "#eee",
+                        borderRadius: 8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text style={{ fontWeight: "700" }}>Pedido {o.id}</Text>
                       <Text>Valor: R$ {Number(o.total).toFixed(2)}</Text>
                       <Text>Status: {o.status}</Text>
                       <Text>Data: {new Date(o.createdAt).toLocaleString()}</Text>
@@ -523,35 +657,64 @@ export default function PerfilScreen() {
                 )}
               </View>
             )}
-
           </ScrollView>
         </View>
       </Modal>
 
       {/* Edit product modal */}
-      <Modal visible={editModalVisible} animationType="slide" onRequestClose={() => setEditModalVisible(false)}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 12 }}>Editar produto</Text>
+            <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 12 }}>
+              Editar produto
+            </Text>
             <Text style={adminStyles.label}>Nome</Text>
             <TextInput style={styles.input} value={editName} onChangeText={setEditName} />
             <Text style={adminStyles.label}>Preço</Text>
-            <TextInput style={styles.input} value={editPrice} onChangeText={setEditPrice} keyboardType="numeric" />
+            <TextInput
+              style={styles.input}
+              value={editPrice}
+              onChangeText={setEditPrice}
+              keyboardType="numeric"
+            />
             <Text style={adminStyles.label}>Estoque</Text>
-            <TextInput style={styles.input} value={editStock} onChangeText={setEditStock} keyboardType="numeric" />
+            <TextInput
+              style={styles.input}
+              value={editStock}
+              onChangeText={setEditStock}
+              keyboardType="numeric"
+            />
             <Text style={adminStyles.label}>Imagem</Text>
-            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-              <TouchableOpacity style={adminStyles.button} onPress={() => pickImageAsBase64(uri => setEditImageDataUri(uri))}>
+            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+              <TouchableOpacity
+                style={adminStyles.button}
+                onPress={() => pickImageAsBase64((uri) => setEditImageDataUri(uri))}
+              >
                 <Text style={adminStyles.buttonText}>Selecionar imagem</Text>
               </TouchableOpacity>
-              {editImageDataUri ? <Image source={{ uri: editImageDataUri }} style={{ width: 80, height: 80, borderRadius: 6 }} /> : null}
+              {editImageDataUri ? (
+                <Image
+                  source={{ uri: editImageDataUri }}
+                  style={{ width: 80, height: 80, borderRadius: 6 }}
+                />
+              ) : null}
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
               <TouchableOpacity style={adminStyles.saveSmall} onPress={saveEditProduct}>
-                <Text style={{ color: '#fff' }}>Salvar</Text>
+                <Text style={{ color: "#fff" }}>Salvar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={adminStyles.cancelSmall} onPress={() => setEditModalVisible(false)}>
+              <TouchableOpacity
+                style={adminStyles.cancelSmall}
+                onPress={() => setEditModalVisible(false)}
+              >
                 <Text>Fechar</Text>
               </TouchableOpacity>
             </View>
@@ -595,11 +758,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingLeft: 5,
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#f98000",
     paddingHorizontal: 20,
     paddingVertical: 15,
@@ -609,7 +772,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 22,
     fontWeight: "bold",
-    fontFamily: 'Playfair Display Bold',
+    fontFamily: "Playfair Display Bold",
   },
   loadingContainer: {
     flex: 1,
@@ -627,13 +790,13 @@ const styles = StyleSheet.create({
   /* reused input */
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 8,
     paddingHorizontal: 15,
     paddingVertical: 10,
     fontSize: 16,
-    color: '#333',
-    backgroundColor: '#fff',
+    color: "#333",
+    backgroundColor: "#fff",
     marginBottom: 8,
   },
 });
@@ -642,100 +805,109 @@ const styles = StyleSheet.create({
 const adminStyles = StyleSheet.create({
   topBar: {
     height: 60,
-    backgroundColor: '#f98000',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: "#f98000",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 12,
   },
-  topTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  topTitle: { color: "#fff", fontSize: 18, fontWeight: "700" },
 
-  sectionTitle: { fontSize: 18, fontWeight: '700', marginTop: 4 },
+  sectionTitle: { fontSize: 18, fontWeight: "700", marginTop: 4 },
 
   productCard: {
     width: 340,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
     marginRight: 12,
     padding: 12,
-    position: 'relative',
+    position: "relative",
   },
-  // overlay da lixeira: canto superior direito do card
   trashOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: "rgba(0,0,0,0.6)",
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 10,
   },
 
-  // checkbox overlay: canto superior esquerdo do card (visível em selectionMode)
   checkboxOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     left: 8,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: "rgba(255,255,255,0.14)",
     width: 34,
     height: 34,
     borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 11,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: "rgba(255,255,255,0.2)",
   },
   checkboxSelected: {
-    backgroundColor: '#38764B',
-    borderColor: '#38764B',
+    backgroundColor: "#38764B",
+    borderColor: "#38764B",
   },
 
   imageBox: {
     height: 160,
     borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
+    overflow: "hidden",
+    backgroundColor: "#333",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  productImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  imagePlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#444' },
-  productInfo: { backgroundColor: '#f1f1f1', padding: 8, marginTop: 8, borderRadius: 4 },
-  productTitle: { fontWeight: '700', color: '#333' },
-  productDesc: { color: '#666', marginTop: 4 },
+  productImage: { width: "100%", height: "100%", resizeMode: "cover" },
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#444",
+  },
+  productInfo: {
+    backgroundColor: "#f1f1f1",
+    padding: 8,
+    marginTop: 8,
+    borderRadius: 4,
+  },
+  productTitle: { fontWeight: "700", color: "#333" },
+  productDesc: { color: "#666", marginTop: 4 },
 
   smallBtn: {
-    backgroundColor: '#38764B',
+    backgroundColor: "#38764B",
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 6,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   button: {
-    backgroundColor: '#38764B',
+    backgroundColor: "#38764B",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
   },
-  buttonText: { color: '#fff', fontWeight: '700' },
+  buttonText: { color: "#fff", fontWeight: "700" },
 
   bigSubmit: {
-    backgroundColor: '#f98000',
+    backgroundColor: "#f98000",
     paddingVertical: 14,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  bigSubmitText: { color: '#fff', fontWeight: '700' },
+  bigSubmitText: { color: "#fff", fontWeight: "700" },
 
-  label: { fontSize: 14, fontWeight: '700', color: '#333', marginTop: 8 },
+  label: { fontSize: 14, fontWeight: "700", color: "#333", marginTop: 8 },
 
-  saveSmall: { backgroundColor: '#38764B', padding: 12, borderRadius: 8 },
-  cancelSmall: { borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 8, marginLeft: 8 },
+  saveSmall: { backgroundColor: "#38764B", padding: 12, borderRadius: 8 },
+  cancelSmall: { borderWidth: 1, borderColor: "#ddd", padding: 12, borderRadius: 8, marginLeft: 8 },
 });

@@ -4,10 +4,11 @@ import {
   doc,
   onSnapshot,
   query,
-  setDoc
-} from 'firebase/firestore'; // Importações do Firestore
-import { useAuth } from '../context/AuthContext'; // Para obter o usuário logado
-import { db } from '../firebase'; // Presumindo que seu arquivo firebase.js exporta 'db'
+  setDoc,
+  writeBatch // <-- CORREÇÃO: Importar writeBatch
+} from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
+import { db } from '../firebase';
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
@@ -36,7 +37,6 @@ const CartContentPlaceholder = () => (
 );
 
 // Componente de Detalhes do Cartão
-// ... [Mantenha CardDetails e PixDetails como estão, pois são apenas UI] ...
 const CardDetails = ({ onClose, cardData, setCardData, showToast }) => {
   
   const handleSelectInstallments = () => {
@@ -53,7 +53,7 @@ const CardDetails = ({ onClose, cardData, setCardData, showToast }) => {
         placeholder="Número do Cartão" 
         placeholderTextColor="#666" 
         keyboardType="numeric"
-        maxLength={19} 
+        maxLength={19} // Geralmente 16 dígitos + espaços/hífens
         onChangeText={(text) => setCardData(prev => ({ ...prev, number: text }))}
         value={cardData.number}
       />
@@ -143,7 +143,7 @@ const SideGradient = ({ style }) => (
 // Fim dos componentes UI
 
 const CartScreen = () => {
-  const { user } = useAuth(); // Obtém o usuário logado
+  const { user } = useAuth(); 
   
   // Estados do Toast
   const [toastVisible, setToastVisible] = useState(false);
@@ -157,7 +157,7 @@ const CartScreen = () => {
   };
   
   const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(true); // Novo estado de loading
+  const [loading, setLoading] = useState(true); 
   
   const [paymentMethod, setPaymentMethod] = useState('CARTAO');
   const [cardDetailsVisible, setCardDetailsVisible] = useState(true);
@@ -171,12 +171,12 @@ const CartScreen = () => {
   });
   const [pixProofAdded, setPixProofAdded] = useState(false);
   
-  const unsubscribeRef = useRef(null); // Ref para o listener do Firestore
+  const unsubscribeRef = useRef(null); 
 
   // --- 1. FUNÇÃO DE CARREGAMENTO AGORA É UM LISTENER EM TEMPO REAL ---
   const setupCartListener = useCallback(() => {
     if (unsubscribeRef.current) {
-        unsubscribeRef.current(); // Limpa o listener antigo
+        unsubscribeRef.current(); 
     }
     
     if (!user) {
@@ -187,15 +187,13 @@ const CartScreen = () => {
 
     setLoading(true);
     
-    // Caminho da subcoleção: carts/{user.uid}/items
     const cartItemsRef = collection(db, CARTS_COLLECTION, user.uid, ITEMS_SUBCOLLECTION);
     const q = query(cartItemsRef);
 
-    // Cria o novo listener em tempo real
     unsubscribeRef.current = onSnapshot(q, (snapshot) => {
         try {
             const items = snapshot.docs.map(doc => ({
-                id: doc.id, // O ID do documento Firestore é o ID do item
+                id: doc.id, 
                 ...doc.data(),
             }));
             setCartItems(items);
@@ -239,7 +237,7 @@ const CartScreen = () => {
         await setDoc(itemDocRef, { 
             ...currentItem, 
             quantity: newQuantity 
-        }, { merge: true }); // Merge para atualizar apenas a quantidade
+        }, { merge: true }); 
         
     } catch (err) {
       console.error('Erro ao atualizar quantidade no Firestore', err);
@@ -264,13 +262,9 @@ const CartScreen = () => {
   const finalizeOrder = async (orderData) => {
     if (!user) return showToast("Usuário não autenticado.", 'error');
 
-    // 1. SIMULAÇÃO: Adicionar Pedido à coleção de Pedidos (usando a simulação de backend do perfil)
-    // Se você tiver uma coleção 'orders' no Firestore, use-a aqui.
+    // 1. Simulação de salvar o pedido na coleção 'orders'
     try {
-        // Exemplo: Salvar no perfil.tsx (Apenas para simular a criação do pedido)
-        // Note: Isso exigiria expor a função addOrder do perfil.tsx ou criar uma coleção 'orders' no Firestore.
-        // Vou simular a criação de um pedido no Firestore (se existir a coleção 'orders'):
-        const ordersRef = collection(db, 'orders'); // Coleção hipotética de pedidos
+        const ordersRef = collection(db, 'orders'); 
         await setDoc(doc(ordersRef), {
             userId: user.uid,
             total: orderData.total,
@@ -284,17 +278,17 @@ const CartScreen = () => {
         console.warn('Erro ao simular adição do pedido na coleção "orders". Continuando com a limpeza do carrinho.', e);
     }
     
-    // 2. LIMPAR O CARRINHO (Remove toda a subcoleção de itens)
-    // Note: Remover subcoleções inteiras é complexo no Firestore, exigindo a remoção de cada item.
+    // 2. LIMPAR O CARRINHO (Usando writeBatch CORRETAMENTE)
     try {
-        const batch = db.batch();
+        // CORREÇÃO: Usando writeBatch(db) em vez de db.batch()
+        const batch = writeBatch(db); 
         cartItems.forEach(item => {
             const itemDocRef = doc(db, CARTS_COLLECTION, user.uid, ITEMS_SUBCOLLECTION, item.id);
             batch.delete(itemDocRef);
         });
         await batch.commit();
 
-        setCartItems([]); // Limpa o estado local
+        setCartItems([]); 
         setShippingCost(0);
         setPixProofAdded(false);
         return true;
@@ -309,7 +303,6 @@ const CartScreen = () => {
   // --- RESTO DA LÓGICA DE UI E VALIDAÇÃO ---
 
   const calculateShipping = () => {
-    // ... [Mantenha a lógica de simulação de frete] ...
     const cleanZip = zipCode.replace(/[^0-9]/g, '');
     let cost = 0;
 
@@ -407,17 +400,14 @@ const CartScreen = () => {
         }
     }
 
-    // Constrói os dados do pedido para o Firestore
     const orderData = {
         total: total,
         items: cartItems,
         paymentMethod: paymentMethod,
-        // Adicionar outros campos de entrega/pagamento simulados se necessário
     };
     
     showToast('Finalizando pedido...', 'info');
 
-    // Executa a finalização e limpeza do Firestore
     const success = await finalizeOrder(orderData); 
     
     if (success) {
