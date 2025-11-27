@@ -5,7 +5,7 @@ import {
   onSnapshot,
   query,
   setDoc,
-  writeBatch // <-- CORREÇÃO: Importar writeBatch
+  writeBatch
 } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
@@ -21,14 +21,14 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // --- CONFIGURAÇÃO DE PERSISTÊNCIA ---
-const CARTS_COLLECTION = 'carts'; // Coleção principal do Firestore
-const ITEMS_SUBCOLLECTION = 'items'; // Subcoleção para itens do carrinho
+const CARTS_COLLECTION = 'carts';
+const ITEMS_SUBCOLLECTION = 'items';
 
 const CartContentPlaceholder = () => (
   <View style={styles.cartContentPlaceholder}>
@@ -36,11 +36,25 @@ const CartContentPlaceholder = () => (
   </View>
 );
 
-// Componente de Detalhes do Cartão
-const CardDetails = ({ onClose, cardData, setCardData, showToast }) => {
+// Componente de Detalhes do Cartão (AJUSTADO PARA PAGAMENTO À VISTA)
+const CardDetails = ({ onClose, cardData, setCardData, showToast, setInstallmentsSelected }) => {
   
-  const handleSelectInstallments = () => {
-    showToast("Simulação de Parcelas: 1x, 3x ou 6x disponíveis.", 'info');
+  const handleConfirmData = () => {
+      // 1. Simula a validação local dos campos (opcional, mas boa prática)
+      const numberValid = cardData.number.replace(/\s/g, '').length >= 13;
+      const holderValid = cardData.holder.length >= 3;
+
+      if (!numberValid || !holderValid) {
+          showToast("Preencha o número e o nome do titular.", 'warning');
+          return;
+      }
+      
+      // 2. Marca o método como pronto
+      showToast("Pagamento à vista confirmado! Pronto para finalizar.", 'success');
+      setInstallmentsSelected(true); 
+      
+      // 3. FECHA O PAINEL IMEDIATAMENTE (Comportamento desejado)
+      onClose(); 
   };
 
   return (
@@ -53,7 +67,7 @@ const CardDetails = ({ onClose, cardData, setCardData, showToast }) => {
         placeholder="Número do Cartão" 
         placeholderTextColor="#666" 
         keyboardType="numeric"
-        maxLength={19} // Geralmente 16 dígitos + espaços/hífens
+        maxLength={19}
         onChangeText={(text) => setCardData(prev => ({ ...prev, number: text }))}
         value={cardData.number}
       />
@@ -84,8 +98,8 @@ const CardDetails = ({ onClose, cardData, setCardData, showToast }) => {
           value={cardData.cvv}
         />
       </View>
-      <TouchableOpacity style={styles.parcelasButton} onPress={handleSelectInstallments}>
-          <Text style={styles.parcelasText}>Selecione as Parcelas</Text>
+      <TouchableOpacity style={styles.parcelasButton} onPress={handleConfirmData}>
+          <Text style={styles.parcelasText}>CONFIRMAR DADOS (À VISTA)</Text>
       </TouchableOpacity>
     </View>
   );
@@ -171,6 +185,8 @@ const CartScreen = () => {
   });
   const [pixProofAdded, setPixProofAdded] = useState(false);
   
+  const [installmentsSelected, setInstallmentsSelected] = useState(false); 
+
   const unsubscribeRef = useRef(null); 
 
   // --- 1. FUNÇÃO DE CARREGAMENTO AGORA É UM LISTENER EM TEMPO REAL ---
@@ -215,11 +231,20 @@ const CartScreen = () => {
   // UseFocusEffect para iniciar e parar o listener
   useFocusEffect(
     useCallback(() => {
+      // Reseta os estados de pagamento/frete ao focar na tela
+      setInstallmentsSelected(false);
+      setShippingCost(0);
+      
+      // Abre o painel do cartão por padrão ao focar, se o método for cartão
+      if (paymentMethod === 'CARTAO') {
+          setCardDetailsVisible(true);
+      }
+
       const unsubscribe = setupCartListener();
       return () => {
         if (unsubscribe) unsubscribe();
       };
-    }, [setupCartListener])
+    }, [setupCartListener, paymentMethod]) 
   );
 
   // --- 2. FUNÇÕES DE MANIPULAÇÃO USAM FIRESTORE (Doc ID = item.productId) ---
@@ -280,7 +305,6 @@ const CartScreen = () => {
     
     // 2. LIMPAR O CARRINHO (Usando writeBatch CORRETAMENTE)
     try {
-        // CORREÇÃO: Usando writeBatch(db) em vez de db.batch()
         const batch = writeBatch(db); 
         cartItems.forEach(item => {
             const itemDocRef = doc(db, CARTS_COLLECTION, user.uid, ITEMS_SUBCOLLECTION, item.id);
@@ -291,6 +315,7 @@ const CartScreen = () => {
         setCartItems([]); 
         setShippingCost(0);
         setPixProofAdded(false);
+        setInstallmentsSelected(false); 
         return true;
     } catch (err) {
         console.error('Erro ao limpar o carrinho (batch delete):', err);
@@ -307,9 +332,13 @@ const CartScreen = () => {
     let cost = 0;
 
     if (cleanZip.length === 8) {
-        const randomCost = Math.random() * (50 - 15) + 15;
+        // Frete entre R$ 2.00 e R$ 10.00
+        const MIN_COST = 2;
+        const MAX_COST = 10;
+        const randomCost = Math.random() * (MAX_COST - MIN_COST) + MIN_COST;
         cost = parseFloat(randomCost.toFixed(2));
         
+        // Mantém 10% de chance de dar frete grátis
         if (Math.random() < 0.1) {
             cost = 0;
             showToast('Frete Grátis! Você ganhou frete grátis!', 'success');
@@ -346,15 +375,17 @@ const CartScreen = () => {
 
   const handlePaymentSelect = (method) => {
     setPixProofAdded(false); 
+    setInstallmentsSelected(false); 
     
+    // CORRIGIDO: Sempre abrir o painel se for o método selecionado
     if (method === 'CARTAO') {
       const shouldToggle = paymentMethod === 'CARTAO' && cardDetailsVisible;
-      setCardDetailsVisible(!shouldToggle);
+      setCardDetailsVisible(!shouldToggle); 
       setPixDetailsVisible(false);
       setPaymentMethod('CARTAO');
     } else {
       const shouldToggle = paymentMethod === 'PIX' && pixDetailsVisible;
-      setPixDetailsVisible(!shouldToggle);
+      setPixDetailsVisible(!shouldToggle); 
       setCardDetailsVisible(false);
       setPaymentMethod('PIX');
     }
@@ -377,23 +408,31 @@ const CartScreen = () => {
       return;
     }
 
-    // Validações OBRIGATÓRIAS (Frete e Pagamento)
+    // 1. Validação Frete
     if (zipCode.length < 8 || shippingCost === 0) {
         showToast('Calcule o frete para continuar a compra.', 'warning');
         return;
     }
 
+    // 2. Validação Cartão (AGORA USA O ESTADO DE FECHAMENTO PARA VALIDAR)
     if (paymentMethod === 'CARTAO') {
+        // Se o painel estiver ABERTO, significa que o usuário não confirmou
         if (cardDetailsVisible) {
             showToast('Feche o painel de detalhes do cartão após inserir os dados.', 'warning');
             return;
         }
+
         const validationResult = validateCardData();
         if (!validationResult.valid) {
             showToast(`Erro no Cartão: ${validationResult.message}`, 'error');
             return;
         }
-    } else if (paymentMethod === 'PIX') {
+        
+        // **NÃO PRECISA MAIS DE check de installmentsSelected AQUI, pois a confirmação já fechou o painel.**
+        // O fluxo agora é: Preenche -> Clica CONFIRMAR DADOS (que fecha) -> Clica FINALIZAR.
+    } 
+    // 3. Validação PIX
+    else if (paymentMethod === 'PIX') {
         if (!pixProofAdded) {
             showToast('Você deve anexar o comprovante de pagamento PIX.', 'warning');
             return;
@@ -526,6 +565,7 @@ const CartScreen = () => {
                 cardData={cardData} 
                 setCardData={setCardData} 
                 showToast={showToast}
+                setInstallmentsSelected={setInstallmentsSelected} // Passando o setter de parcelas
             />
           )}
           {paymentMethod === 'PIX' && pixDetailsVisible && (
