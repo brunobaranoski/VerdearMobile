@@ -36,16 +36,15 @@ const CartContentPlaceholder = () => (
   </View>
 );
 
-// Componente de Detalhes do Cartão (AJUSTADO PARA PAGAMENTO À VISTA)
+// Componente de Detalhes do Cartão (AJUSTADO PARA MAXLENGTH=4)
 const CardDetails = ({ onClose, cardData, setCardData, showToast, setInstallmentsSelected }) => {
   
   const handleConfirmData = () => {
-      // 1. Simula a validação local dos campos (opcional, mas boa prática)
-      const numberValid = cardData.number.replace(/\s/g, '').length >= 13;
-      const holderValid = cardData.holder.length >= 3;
-
-      if (!numberValid || !holderValid) {
-          showToast("Preencha o número e o nome do titular.", 'warning');
+      
+      const validationResult = validateCardDataCustom(cardData);
+      
+      if (!validationResult.valid) {
+          showToast(validationResult.message, 'warning');
           return;
       }
       
@@ -56,6 +55,25 @@ const CardDetails = ({ onClose, cardData, setCardData, showToast, setInstallment
       // 3. FECHA O PAINEL IMEDIATAMENTE (Comportamento desejado)
       onClose(); 
   };
+  
+  // Função de validação local (dentro do escopo para simplificar)
+  const validateCardDataCustom = (data) => {
+    if (data.number.replace(/\s/g, '').length < 13) {
+        return { valid: false, message: 'Número do cartão incompleto.' };
+    }
+    if (data.holder.length < 3) {
+        return { valid: false, message: 'Nome do titular incompleto.' };
+    }
+    // CORREÇÃO AQUI: Espera 4 dígitos (MMYY) sem a barra
+    if (data.expiry.length !== 4) { 
+        return { valid: false, message: 'Validade inválida (MMYY).' };
+    }
+    if (data.cvv.length < 3) {
+        return { valid: false, message: 'CVV inválido.' };
+    }
+    return { valid: true };
+  };
+
 
   return (
     <View style={styles.detailsContainer}>
@@ -81,10 +99,10 @@ const CardDetails = ({ onClose, cardData, setCardData, showToast, setInstallment
       <View style={styles.row}>
         <TextInput 
           style={[styles.inputDetails, styles.inputHalf]} 
-          placeholder="Validade (MM/AA)" 
+          placeholder="Validade (MMYY)" 
           placeholderTextColor="#666" 
           keyboardType="numeric"
-          maxLength={5}
+          maxLength={4} // CORRIGIDO: Aceita apenas 4 dígitos
           onChangeText={(text) => setCardData(prev => ({ ...prev, expiry: text }))}
           value={cardData.expiry}
         />
@@ -364,8 +382,9 @@ const CartScreen = () => {
     if (holder.length < 3) {
         return { valid: false, message: 'Nome do titular muito curto.' };
     }
-    if (expiry.length !== 5 || !expiry.includes('/')) {
-        return { valid: false, message: 'Formato de validade inválido (MM/AA).' };
+    // CORRIGIDO: Valida que são 4 dígitos (MMYY) sem exigir a barra
+    if (expiry.replace(/\D/g, '').length !== 4) { 
+        return { valid: false, message: 'Validade deve ter 4 dígitos (MMYY).' };
     }
     if (cvv.length < 3 || cvv.length > 4) {
         return { valid: false, message: 'CVV inválido.' };
@@ -377,7 +396,7 @@ const CartScreen = () => {
     setPixProofAdded(false); 
     setInstallmentsSelected(false); 
     
-    // CORRIGIDO: Sempre abrir o painel se for o método selecionado
+    // Lógica para controle da visibilidade do painel
     if (method === 'CARTAO') {
       const shouldToggle = paymentMethod === 'CARTAO' && cardDetailsVisible;
       setCardDetailsVisible(!shouldToggle); 
@@ -428,8 +447,7 @@ const CartScreen = () => {
             return;
         }
         
-        // **NÃO PRECISA MAIS DE check de installmentsSelected AQUI, pois a confirmação já fechou o painel.**
-        // O fluxo agora é: Preenche -> Clica CONFIRMAR DADOS (que fecha) -> Clica FINALIZAR.
+        // Se a validação dos campos passou, a confirmação de dados é implícita pelo fechamento.
     } 
     // 3. Validação PIX
     else if (paymentMethod === 'PIX') {
