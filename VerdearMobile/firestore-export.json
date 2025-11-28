@@ -2,156 +2,644 @@
   "users": [
     {
       "id": "3MgPjYEbrgSmtLaAcJ7N",
-      "name": "Verdear Teste",
       "email": "verdear@gmail.com",
+      "name": "Verdear Teste",
       "avatar": "https://i.pravatar.cc/150?u=verdear@gmail.com"
     },
     {
       "id": "DUmwhCRyo2SdIxoiMVvbkBuKuYK2",
-      "cpfCnpj": "98281290005",
-      "name": "Testando Criação",
-      "avatar": "",
       "userType": "Vendedor",
+      "avatar": "",
+      "name": "Testando Criação",
       "createdAt": "2025-11-20T13:56:13.090Z",
+      "phone": "46998062145",
       "email": "testando@gmail.com",
-      "phone": "46998062145"
+      "cpfCnpj": "98281290005"
+    },
+    {
+      "id": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "avatar": "",
+      "phone": "51993000774",
+      "createdAt": "2025-11-27T00:33:24.572Z",
+      "name": "Júlia Goulart",
+      "cpfCnpj": "60068583044",
+      "userType": "Vendedor",
+      "email": "juliagoulartcunha@alunos.utfpr.edu.br"
     },
     {
       "id": "TQQ53YSK7Ia9Nd8WmHbGyKYEYsy2",
       "name": "teste da silva 2",
-      "userType": "Vendedor",
       "avatar": "https://i.pravatar.cc/150?u=teste%40fmail.com",
-      "createdAt": "2025-11-16T20:48:38.612Z",
       "email": "teste@fmail.com",
       "cpfCnpj": "04645089080",
-      "phone": "55992013039"
+      "phone": "55992013039",
+      "userType": "Vendedor",
+      "createdAt": "2025-11-16T20:48:38.612Z"
     },
     {
       "id": "TorbCCV0dMUVxfwFIL5Be6VSZok2",
-      "state": "SP",
-      "phone": "46991256321",
-      "userType": "Comprador",
+      "avatar": "https://i.pravatar.cc/150?u=tais.2003%40alunos.utfpr.edu.br",
       "bio": "danone",
-      "createdAt": "2025-11-16T21:47:18.161Z",
-      "address": "tests",
-      "cep": "85660000",
       "addressNumber": "123",
-      "email": "tais.2003@alunos.utfpr.edu.br",
-      "complement": "203",
       "city": "asdfadsf",
-      "name": "Tais Carvalho dos Santos",
       "cpfCnpj": "70464759030",
-      "avatar": "https://i.pravatar.cc/150?u=tais.2003%40alunos.utfpr.edu.br"
+      "state": "SP",
+      "address": "tests",
+      "name": "Tais Carvalho dos Santos",
+      "email": "tais.2003@alunos.utfpr.edu.br",
+      "cep": "85660000",
+      "complement": "203",
+      "createdAt": "2025-11-16T21:47:18.161Z",
+      "userType": "Comprador",
+      "phone": "46991256321"
     },
     {
       "id": "WwmfhTmZ5zWak4i8TsWAUxT3k0y1",
-      "name": "admin",
       "email": "admin@gmail.com",
-      "createdAt": "2025-11-02T17:12:53.290Z",
-      "avatar": "https://i.pravatar.cc/150?u=admin%40gmail.com"
+      "name": "admin",
+      "avatar": "https://i.pravatar.cc/150?u=admin%40gmail.com",
+      "createdAt": "2025-11-02T17:12:53.290Z"
     },
     {
       "id": "YZvnyofTzWfROuIBAhDA4f12zBQ2",
-      "email": "comprador@gmail.com",
-      "phone": "46991345678",
-      "createdAt": "2025-11-16T20:56:12.703Z",
-      "cpfCnpj": "66192668000",
       "name": "comprador da silva",
+      "createdAt": "2025-11-16T20:56:12.703Z",
+      "userType": "Comprador",
+      "email": "comprador@gmail.com",
       "avatar": "https://i.pravatar.cc/150?u=comprador%40gmail.com",
-      "userType": "Comprador"
+      "phone": "46991345678",
+      "cpfCnpj": "66192668000"
     },
     {
       "id": "aZE7hxKvkPRRgsl8sSoaLfHUQN73",
-      "createdAt": "2025-11-16T20:29:20.379Z",
       "email": "teste@teste.gmail.com",
-      "phone": "55992013546",
       "cpfCnpj": "04645089080",
-      "avatar": "https://i.pravatar.cc/150?u=teste%40teste.gmail.com",
       "userType": "Comprador",
-      "name": "Teste da Silva"
+      "avatar": "https://i.pravatar.cc/150?u=teste%40teste.gmail.com",
+      "createdAt": "2025-11-16T20:29:20.379Z",
+      "name": "Teste da Silva",
+      "phone": "55992013546"
+    },
+    {
+      "id": "s4kf2rolXadWZ5nPoeYaIFMxEzJ3",
+      "userType": "Vendedor",
+      "phone": "46920014451",
+      "bio": "",
+      "createdAt": "2025-11-27T01:48:18.952Z",
+      "addressNumber": "",
+      "avatar": "",
+      "city": "",
+      "email": "joao@gmail.com",
+      "address": "",
+      "name": "Joao Rickli",
+      "complement": "",
+      "state": "",
+      "cpfCnpj": "09462974950",
+      "cep": ""
     }
   ],
   "chats": [
     {
       "id": "4T5lRjTPKSspIk5pHi88",
-      "participants": [
-        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
-        "TQQ53YSK7Ia9Nd8WmHbGyKYEYsy2"
-      ],
+      "title": "teste da silva",
       "lastMessage": "opa",
+      "avatar": "https://i.pravatar.cc/150?u=teste%40fmail.com",
       "lastUpdated": {
         "type": "firestore/timestamp/1.0",
         "seconds": 1763337597,
         "nanoseconds": 311000000
       },
-      "avatar": "https://i.pravatar.cc/150?u=teste%40fmail.com",
-      "title": "teste da silva"
+      "participants": [
+        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
+        "TQQ53YSK7Ia9Nd8WmHbGyKYEYsy2"
+      ]
     },
     {
       "id": "TBFdFgXoXnVLKR4uR25V",
+      "lastUpdated": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764201161,
+        "nanoseconds": 171000000
+      },
       "participants": [
         "WwmfhTmZ5zWak4i8TsWAUxT3k0y1",
         "3MgPjYEbrgSmtLaAcJ7N"
       ],
-      "lastMessage": "opa",
-      "lastUpdated": {
-        "type": "firestore/timestamp/1.0",
-        "seconds": 1762726094,
-        "nanoseconds": 657000000
-      },
+      "lastMessage": "Oii",
       "title": "Verdear Teste",
       "avatar": "https://i.pravatar.cc/150?u=verdear@gmail.com"
     },
     {
       "id": "bMnw7juqITlGFK8jiKOH",
-      "lastMessage": "opa",
-      "lastUpdated": {
-        "type": "firestore/timestamp/1.0",
-        "seconds": 1763649085,
-        "nanoseconds": 933000000
+      "avatars": {
+        "DUmwhCRyo2SdIxoiMVvbkBuKuYK2": "https://i.pravatar.cc/150?u=comprador%40gmail.com",
+        "YZvnyofTzWfROuIBAhDA4f12zBQ2": null
       },
       "participants": [
         "DUmwhCRyo2SdIxoiMVvbkBuKuYK2",
         "YZvnyofTzWfROuIBAhDA4f12zBQ2"
       ],
-      "avatars": {
-        "DUmwhCRyo2SdIxoiMVvbkBuKuYK2": "https://i.pravatar.cc/150?u=comprador%40gmail.com",
-        "YZvnyofTzWfROuIBAhDA4f12zBQ2": null
-      },
+      "lastMessage": "opa",
       "titles": {
         "DUmwhCRyo2SdIxoiMVvbkBuKuYK2": "comprador da silva",
         "YZvnyofTzWfROuIBAhDA4f12zBQ2": "Testando Criação"
+      },
+      "lastUpdated": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1763649085,
+        "nanoseconds": 933000000
       }
     },
     {
       "id": "c8hssXaRRlPp8Dl85L8M",
-      "participants": [
-        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
-        "TorbCCV0dMUVxfwFIL5Be6VSZok2"
-      ],
-      "title": "Tais Carvalho dos Santos",
       "avatar": "https://i.pravatar.cc/150?u=tais.2003%40alunos.utfpr.edu.br",
       "lastUpdated": {
         "type": "firestore/timestamp/1.0",
         "seconds": 1763336840,
         "nanoseconds": 522000000
       },
-      "lastMessage": "oie"
+      "participants": [
+        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
+        "TorbCCV0dMUVxfwFIL5Be6VSZok2"
+      ],
+      "lastMessage": "oie",
+      "title": "Tais Carvalho dos Santos"
     },
     {
       "id": "frq2NoZdz6Iw4swe3cDa",
-      "participants": [
-        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
-        "DUmwhCRyo2SdIxoiMVvbkBuKuYK2"
-      ],
-      "avatar": null,
+      "lastMessage": "Oi",
       "title": "Testando Criação",
       "lastUpdated": {
         "type": "firestore/timestamp/1.0",
         "seconds": 1763648125,
         "nanoseconds": 807000000
       },
-      "lastMessage": "Oi"
+      "avatar": null,
+      "participants": [
+        "meo4NuiN4DSGu32KO3rqGcd5nwB3",
+        "DUmwhCRyo2SdIxoiMVvbkBuKuYK2"
+      ]
     }
-  ]
+  ],
+  "orders": [
+    {
+      "id": "7Vu2fZaU8UexmbQ4gbCx",
+      "items": [
+        {
+          "name": "Batata",
+          "quantity": 2,
+          "price": 15
+        }
+      ],
+      "paymentMethod": "PIX",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764283475,
+        "nanoseconds": 810000000
+      },
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "status": "Processing",
+      "total": 77.72999999999999
+    },
+    {
+      "id": "DZcT0RXNuc1xH2fy7LRd",
+      "total": 64.61,
+      "items": [
+        {
+          "name": "Produto 1",
+          "quantity": 1,
+          "price": 25
+        }
+      ],
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764223980,
+        "nanoseconds": 793000000
+      },
+      "paymentMethod": "PIX",
+      "status": "Processing"
+    },
+    {
+      "id": "FUW07QGx1Maty3KJgTxc",
+      "items": [
+        {
+          "name": "Produto 1",
+          "price": 25,
+          "quantity": 1
+        }
+      ],
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764223980,
+        "nanoseconds": 49000000
+      },
+      "status": "Processing",
+      "paymentMethod": "PIX",
+      "total": 64.61,
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2"
+    },
+    {
+      "id": "Lj469oYxNNRjuRThzlsN",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764284411,
+        "nanoseconds": 499000000
+      },
+      "status": "Processing",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "paymentMethod": "PIX",
+      "items": [
+        {
+          "price": 22,
+          "name": "produto teste123",
+          "quantity": 1
+        }
+      ],
+      "total": 45.879999999999995
+    },
+    {
+      "id": "Mcd0vchqnoNIs56TduqC",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764283762,
+        "nanoseconds": 954000000
+      },
+      "userId": "s4kf2rolXadWZ5nPoeYaIFMxEzJ3",
+      "paymentMethod": "PIX",
+      "status": "Processing",
+      "total": 22.939999999999998,
+      "items": [
+        {
+          "name": "batata doce",
+          "quantity": 5,
+          "price": 0.99
+        }
+      ]
+    },
+    {
+      "id": "MxY05a9sF4S77vaDNida",
+      "paymentMethod": "PIX",
+      "items": [
+        {
+          "price": 0.99,
+          "quantity": 1,
+          "name": "batata doce"
+        }
+      ],
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764284376,
+        "nanoseconds": 175000000
+      },
+      "total": 18.75,
+      "status": "Processing",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2"
+    },
+    {
+      "id": "OFS2zENX9CLPVYsFrrQ4",
+      "total": 28.94,
+      "userId": "meo4NuiN4DSGu32KO3rqGcd5nwB3",
+      "paymentMethod": "PIX",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764283904,
+        "nanoseconds": 464000000
+      },
+      "status": "Processing",
+      "items": [
+        {
+          "price": 0.99,
+          "name": "batata doce",
+          "quantity": 4
+        }
+      ]
+    },
+    {
+      "id": "Op44X4kd4CmkO2B5ZDEj",
+      "total": 48.62,
+      "userId": "s4kf2rolXadWZ5nPoeYaIFMxEzJ3",
+      "paymentMethod": "PIX",
+      "status": "Processing",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764282554,
+        "nanoseconds": 177000000
+      },
+      "items": [
+        {
+          "price": 15,
+          "quantity": 1,
+          "name": "Batata"
+        }
+      ]
+    },
+    {
+      "id": "PMg8v1AEkGGeq8CJfuNY",
+      "total": 75.7,
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764224166,
+        "nanoseconds": 214000000
+      },
+      "status": "Processing",
+      "paymentMethod": "PIX",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "items": [
+        {
+          "quantity": 2,
+          "price": 25,
+          "name": "Produto 1"
+        }
+      ]
+    },
+    {
+      "id": "Q2A6jl7lEfeIV7T9dOEo",
+      "paymentMethod": "PIX",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764223984,
+        "nanoseconds": 958000000
+      },
+      "items": [
+        {
+          "price": 25,
+          "quantity": 2,
+          "name": "Produto 1"
+        }
+      ],
+      "total": 89.61,
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "status": "Processing"
+    },
+    {
+      "id": "UOjpVtTImLDWYdsfnsdx",
+      "paymentMethod": "PIX",
+      "items": [
+        {
+          "price": 15,
+          "name": "Batata",
+          "quantity": 1
+        }
+      ],
+      "total": 48.62,
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764282566,
+        "nanoseconds": 921000000
+      },
+      "userId": "s4kf2rolXadWZ5nPoeYaIFMxEzJ3",
+      "status": "Processing"
+    },
+    {
+      "id": "VB3Eceo9tFFCRkyq8LF6",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764223979,
+        "nanoseconds": 653000000
+      },
+      "items": [
+        {
+          "name": "Produto 1",
+          "quantity": 1,
+          "price": 25
+        }
+      ],
+      "total": 64.61,
+      "status": "Processing",
+      "paymentMethod": "PIX"
+    },
+    {
+      "id": "bss2KnwzqRCW2Yp9Poda",
+      "items": [
+        {
+          "name": "Produto 1",
+          "price": 25,
+          "quantity": 1
+        }
+      ],
+      "status": "Processing",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764223973,
+        "nanoseconds": 892000000
+      },
+      "paymentMethod": "PIX",
+      "total": 64.61
+    },
+    {
+      "id": "dN2Si55RxwsWAM3wDL4z",
+      "total": 64.61,
+      "paymentMethod": "PIX",
+      "items": [
+        {
+          "quantity": 1,
+          "name": "Produto 1",
+          "price": 25
+        }
+      ],
+      "status": "Processing",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764223980,
+        "nanoseconds": 237000000
+      }
+    },
+    {
+      "id": "dfqPhW2KIllUdkz3gtjC",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "paymentMethod": "PIX",
+      "total": 29.53,
+      "status": "Processing",
+      "items": [
+        {
+          "price": 22,
+          "name": "produto teste123",
+          "quantity": 1
+        }
+      ],
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764284546,
+        "nanoseconds": 48000000
+      }
+    },
+    {
+      "id": "hedLfKe7s9tlWCzNZyVC",
+      "paymentMethod": "PIX",
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764223985,
+        "nanoseconds": 480000000
+      },
+      "items": [
+        {
+          "price": 25,
+          "quantity": 2,
+          "name": "Produto 1"
+        }
+      ],
+      "status": "Processing",
+      "total": 89.61,
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2"
+    },
+    {
+      "id": "kx10PIT8GP6jCWl1j61h",
+      "items": [
+        {
+          "name": "produto teste123",
+          "quantity": 2,
+          "price": 22
+        }
+      ],
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "status": "Processing",
+      "total": 48.92,
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764285670,
+        "nanoseconds": 448000000
+      },
+      "paymentMethod": "CARTAO"
+    },
+    {
+      "id": "lr9v8OsJCHY9ff3LwVGL",
+      "total": 77.72999999999999,
+      "items": [
+        {
+          "name": "Batata",
+          "quantity": 2,
+          "price": 15
+        }
+      ],
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764283474,
+        "nanoseconds": 965000000
+      },
+      "paymentMethod": "PIX",
+      "status": "Processing",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2"
+    },
+    {
+      "id": "mZuVcXHrnvblPFjDwQbs",
+      "status": "Processing",
+      "total": 70.32,
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764224778,
+        "nanoseconds": 463000000
+      },
+      "paymentMethod": "PIX",
+      "items": [
+        {
+          "name": "Produto 1",
+          "quantity": 1,
+          "price": 25
+        }
+      ],
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2"
+    },
+    {
+      "id": "neVqUIMypNJ3XCcbXV40",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "total": 49.74,
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764285284,
+        "nanoseconds": 907000000
+      },
+      "paymentMethod": "PIX",
+      "items": [
+        {
+          "quantity": 2,
+          "price": 22,
+          "name": "produto teste123"
+        }
+      ],
+      "status": "Processing"
+    },
+    {
+      "id": "p968SjfPAxK0lS9IYpwu",
+      "status": "Processing",
+      "items": [
+        {
+          "name": "Batata",
+          "quantity": 3,
+          "price": 15
+        }
+      ],
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "total": 84.52000000000001,
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764283614,
+        "nanoseconds": 935000000
+      },
+      "paymentMethod": "PIX"
+    },
+    {
+      "id": "ycU0cBDx15PmmYdFBeIP",
+      "status": "Processing",
+      "userId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "paymentMethod": "PIX",
+      "items": [
+        {
+          "quantity": 1,
+          "name": "Produto 1",
+          "price": 25
+        }
+      ],
+      "timestamp": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764224387,
+        "nanoseconds": 326000000
+      },
+      "total": 67.22999999999999
+    }
+  ],
+  "products": [
+    {
+      "id": "63DFZvE1Zn3gyP74SI65",
+      "name": "batata doce",
+      "sellerId": "s4kf2rolXadWZ5nPoeYaIFMxEzJ3",
+      "createdAt": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764283672,
+        "nanoseconds": 313000000
+      },
+      "description": "batata doce lontrense",
+      "price": 0.99,
+      "updatedAt": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764283672,
+        "nanoseconds": 313000000
+      },
+      "image": null
+    },
+    {
+      "id": "U7zl3hM9Fp6urhSfQ8ec",
+      "createdAt": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764284397,
+        "nanoseconds": 352000000
+      },
+      "price": 22,
+      "name": "produto teste123",
+      "updatedAt": {
+        "type": "firestore/timestamp/1.0",
+        "seconds": 1764284397,
+        "nanoseconds": 352000000
+      },
+      "image": null,
+      "sellerId": "Jff6Ne3MWyPR3UJLs3MpK1KuNXu2",
+      "description": "123"
+    }
+  ],
+  "reviews": [],
+  "ratings": [],
+  "messages": []
 }
